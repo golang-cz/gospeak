@@ -3,7 +3,6 @@ package golang
 import (
 	"fmt"
 	"go/types"
-	"os"
 
 	"github.com/pkg/errors"
 	"github.com/webrpc/webrpc/schema"
@@ -21,9 +20,6 @@ func (p *parser) parsePkgInterfaces(scope *types.Scope) error {
 			Schema: p.schema, // denormalize/back-reference
 		}
 
-		fmt.Fprintf(os.Stderr, "interface %v {\n", name)
-		defer fmt.Fprintf(os.Stderr, "}\n")
-
 		// Loop over the interface's methods.
 		for i := 0; i < iface.NumMethods(); i++ {
 			method := iface.Method(i)
@@ -32,7 +28,6 @@ func (p *parser) parsePkgInterfaces(scope *types.Scope) error {
 			}
 
 			methodName := method.Id()
-			fmt.Printf("  %v\n", methodName)
 
 			methodSignature, ok := method.Type().(*types.Signature)
 			if !ok {
