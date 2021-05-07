@@ -19,19 +19,6 @@ func NewParser(r *schema.Reader) *parser {
 		resolvedImports: map[string]struct{}{
 			// Initial schema file's package name artificially set by golang.org/x/tools/go/packages.
 			"command-line-arguments": struct{}{},
-
-			// The following imports are already defined in the Go template.
-			"context":       struct{}{},
-			"encoding/json": struct{}{},
-			"fmt":           struct{}{},
-			"io/ioutil":     struct{}{},
-			"net/http":      struct{}{},
-			"time":          struct{}{},
-			"strings":       struct{}{},
-			"bytes":         struct{}{},
-			"errors":        struct{}{},
-			"io":            struct{}{},
-			"net/url":       struct{}{},
 		},
 	}
 }
