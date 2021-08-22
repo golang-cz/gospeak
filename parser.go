@@ -2,6 +2,7 @@ package golang
 
 import (
 	"go/types"
+	"os"
 	"path"
 
 	"github.com/pkg/errors"
@@ -42,8 +43,17 @@ type parser struct {
 
 // Parses Go source file and return WebRPC schema.
 func (p *parser) Parse(filePath string) (*schema.WebRPCSchema, error) {
+	file, err := os.Stat(filePath)
+	if err != nil {
+		return nil, err
+	}
+	if file.Mode().IsRegular() {
+		// Parse all files in the given schema file's directory, so the parser can see all the pkg types.
+		filePath = path.Dir(filePath)
+	}
+
 	cfg := &packages.Config{
-		Dir:  path.Dir(filePath),
+		Dir:  filePath,
 		Mode: packages.NeedName | packages.NeedImports | packages.NeedTypes | packages.NeedFiles | packages.NeedDeps | packages.NeedSyntax,
 	}
 
@@ -57,9 +67,8 @@ func (p *parser) Parse(filePath string) (*schema.WebRPCSchema, error) {
 
 	p.schemaPkgName = schemaPkg[0].Name
 
-	err = p.parsePkgInterfaces(schemaPkg[0].Types.Scope())
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse Go interfaces")
+	if err := p.lookupAndParseInterface(schemaPkg[0].Types.Scope()); err != nil {
+		return nil, errors.WithStack(err)
 	}
 
 	return p.schema, nil

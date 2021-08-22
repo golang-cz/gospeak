@@ -29,7 +29,7 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 	// each input Go type into a hashmap cache. But also, since we need to support recursive types
 	// (ie. self-referencing structs, linked lists, circular dependencies etc.), we warm the cache
 	// up-front, and then we update the value via a pointer dereference in the defer function.
-	// Any subseqential calls with the same input type, even nested/recursive calls from within this
+	// Any subsequential calls with the same input type, even nested/recursive calls from within this
 	// function, will return the same pointer. Note: We're parsing sequentially, no need for sync.Map.
 	lockRecursiveTypes := &schema.VarType{}
 	p.parsedTypes[typ] = lockRecursiveTypes // Warm the cache up-front.
@@ -107,7 +107,7 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 	case *types.Pointer:
 		varType, err = p.parseNamedType(typeName, v.Elem())
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to dereference pointer")
+			return nil, errors.Wrapf(err, "failed to dereference pointer %v", v)
 		}
 		return varType, nil
 

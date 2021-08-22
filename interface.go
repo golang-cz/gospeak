@@ -8,73 +8,89 @@ import (
 	"github.com/webrpc/webrpc/schema"
 )
 
-func (p *parser) parsePkgInterfaces(scope *types.Scope) error {
+func (p *parser) lookupAndParseInterface(scope *types.Scope) error {
+	var iface *types.Interface
+	var ifaceName string
+
 	for _, name := range scope.Names() {
-		iface, ok := scope.Lookup(name).Type().Underlying().(*types.Interface)
-		if !ok {
-			continue
+		if i, ok := scope.Lookup(name).Type().Underlying().(*types.Interface); ok && scope.Lookup(name).Exported() {
+			if iface != nil {
+				return errors.Errorf("found too many interfaces in the given schema pkg")
+			}
+			iface = i
+			ifaceName = name
 		}
-
-		service := &schema.Service{
-			Name:   schema.VarName(name),
-			Schema: p.schema, // denormalize/back-reference
-		}
-
-		// Loop over the interface's methods.
-		for i := 0; i < iface.NumMethods(); i++ {
-			method := iface.Method(i)
-			if !method.Exported() {
-				continue
-			}
-
-			methodName := method.Id()
-
-			methodSignature, ok := method.Type().(*types.Signature)
-			if !ok {
-				return errors.Errorf("interface %v method %v(): failed to get method signature", name, methodName)
-			}
-
-			methodParams := methodSignature.Params()
-			inputs, err := p.getMethodArguments(methodParams, true)
-			if err != nil {
-				return errors.Wrapf(err, "interface %v method %v(): failed to get inputs (method arguments)", name, methodName)
-			}
-
-			// First method argument must be of type context.Context.
-			if methodParams.Len() == 0 {
-				return errors.Errorf("interface %v method %v(): first method argument must be context.Context: no arguments defined", name, methodName)
-			}
-			if err := ensureContextType(methodParams.At(0).Type()); err != nil {
-				return errors.Wrapf(err, "interface %v method %v(): first method argument must be context.Context", name, methodName)
-			}
-			inputs = inputs[1:] // Cut it off. The gen/golang adds context.Context as first method argument automatically.
-
-			methodResults := methodSignature.Results()
-			outputs, err := p.getMethodArguments(methodResults, false)
-			if err != nil {
-				return errors.Wrapf(err, "interface %v method %v(): failed to get outputs (method results)", name, methodName)
-			}
-
-			// Last method return value must be of type error.
-			if methodResults.Len() == 0 {
-				return errors.Errorf("interface %v method %v(): last return value must be context.Context: no return values defined", name, methodName)
-			}
-			if err := ensureErrorType(methodResults.At(methodResults.Len() - 1).Type()); err != nil {
-				return errors.Wrapf(err, "interface %v method %v(): first method argument must be context.Context", name, methodName)
-			}
-			outputs = outputs[:len(outputs)-1] // Cut it off. The gen/golang adds error as a last return value automatically.
-
-			service.Methods = append(service.Methods, &schema.Method{
-				Name:    schema.VarName(methodName),
-				Inputs:  inputs,
-				Outputs: outputs,
-				Service: service, // denormalize/back-reference
-			})
-		}
-
-		p.schema.Services = append(p.schema.Services, service)
+	}
+	if iface == nil {
+		return errors.Errorf("no interfaces found in the given schema file")
 	}
 
+	if err := p.parseInterfaceMethods(iface, ifaceName); err != nil {
+		return errors.Wrapf(err, "interface %v", ifaceName)
+	}
+
+	return nil
+}
+
+func (p *parser) parseInterfaceMethods(iface *types.Interface, name string) error {
+	service := &schema.Service{
+		Name:   schema.VarName(name),
+		Schema: p.schema, // denormalize/back-reference
+	}
+
+	// Loop over the interface's methods.
+	for i := 0; i < iface.NumMethods(); i++ {
+		method := iface.Method(i)
+		if !method.Exported() {
+			return nil
+		}
+
+		methodName := method.Id()
+
+		methodSignature, ok := method.Type().(*types.Signature)
+		if !ok {
+			return errors.Errorf("%v(): failed to get method signature", methodName)
+		}
+
+		methodParams := methodSignature.Params()
+		inputs, err := p.getMethodArguments(methodParams, true)
+		if err != nil {
+			return errors.Wrapf(err, "%v(): failed to get inputs", methodName)
+		}
+
+		// First method argument must be of type context.Context.
+		if methodParams.Len() == 0 {
+			return errors.Errorf("%v(): first method argument must be context.Context: no arguments defined", methodName)
+		}
+		if err := ensureContextType(methodParams.At(0).Type()); err != nil {
+			return errors.Wrapf(err, "%v(): first method argument must be context.Context", methodName)
+		}
+		inputs = inputs[1:] // Cut it off. The gen/golang adds context.Context as first method argument automatically.
+
+		methodResults := methodSignature.Results()
+		outputs, err := p.getMethodArguments(methodResults, false)
+		if err != nil {
+			return errors.Wrapf(err, "%v(): failed to get outputs", methodName)
+		}
+
+		// Last method return value must be of type error.
+		if methodResults.Len() == 0 {
+			return errors.Errorf("%v(): last return value must be context.Context: no return values defined", methodName)
+		}
+		if err := ensureErrorType(methodResults.At(methodResults.Len() - 1).Type()); err != nil {
+			return errors.Wrapf(err, "%v(): first method argument must be context.Context", methodName)
+		}
+		outputs = outputs[:len(outputs)-1] // Cut it off. The gen/golang adds error as a last return value automatically.
+
+		service.Methods = append(service.Methods, &schema.Method{
+			Name:    schema.VarName(methodName),
+			Inputs:  inputs,
+			Outputs: outputs,
+			Service: service, // denormalize/back-reference
+		})
+	}
+
+	p.schema.Services = append(p.schema.Services, service)
 	return nil
 }
 
@@ -96,7 +112,7 @@ func (p *parser) getMethodArguments(params *types.Tuple, isInput bool) ([]*schem
 
 		varType, err := p.parseType(typ) // Type name will be resolved deeper down the stack.
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse argument %v", name)
+			return nil, errors.Wrapf(err, "failed to parse argument %v %v", name, typ)
 		}
 
 		arg := &schema.MethodArgument{
