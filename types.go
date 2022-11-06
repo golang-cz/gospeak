@@ -1,4 +1,4 @@
-package golang
+package go2webrpc
 
 import (
 	"go/types"
