@@ -8,35 +8,13 @@ import (
 	"github.com/webrpc/webrpc/schema"
 )
 
-func (p *parser) lookupAndParseInterface(scope *types.Scope) error {
-	var iface *types.Interface
-	var ifaceName string
-
-	for _, name := range scope.Names() {
-		if i, ok := scope.Lookup(name).Type().Underlying().(*types.Interface); ok && scope.Lookup(name).Exported() {
-			if iface != nil {
-				return errors.Errorf("found too many interfaces in the given schema pkg")
-			}
-			iface = i
-			ifaceName = name
-		}
-	}
-	if iface == nil {
-		return errors.Errorf("no interfaces found in the given schema file")
-	}
-
-	if err := p.parseInterfaceMethods(iface, ifaceName); err != nil {
-		return errors.Wrapf(err, "interface %v", ifaceName)
-	}
-
-	return nil
-}
-
 func (p *parser) parseInterfaceMethods(iface *types.Interface, name string) error {
 	service := &schema.Service{
 		Name:   schema.VarName(name),
 		Schema: p.schema, // denormalize/back-reference
 	}
+
+	fmt.Println(iface.NumMethods())
 
 	// Loop over the interface's methods.
 	for i := 0; i < iface.NumMethods(); i++ {

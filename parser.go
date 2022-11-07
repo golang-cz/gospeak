@@ -2,6 +2,7 @@ package go2webrpc
 
 import (
 	"go/types"
+	"log"
 	"os"
 	"path"
 
@@ -10,18 +11,61 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-func NewParser(r *schema.Reader) *parser {
-	return &parser{
+// Parse Go source file or package folder and return WebRPC schema.
+func Parse(filePath string, goInterfaceName string) (*schema.WebRPCSchema, error) {
+	file, err := os.Stat(filePath)
+	if err != nil {
+		return nil, err
+	}
+	if file.Mode().IsRegular() {
+		// Parse all files in the given schema file's directory, so the parser can see all the pkg types.
+		filePath = path.Dir(filePath)
+	}
+
+	cfg := &packages.Config{
+		Dir:  filePath,
+		Mode: packages.NeedName | packages.NeedImports | packages.NeedTypes | packages.NeedFiles | packages.NeedDeps | packages.NeedSyntax,
+	}
+
+	log.Printf("loading %v\n", filePath)
+	schemaPkg, err := packages.Load(cfg, filePath)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to load packages")
+	}
+	if len(schemaPkg) != 1 {
+		return nil, errors.Errorf("failed to load initial package (len=%v)", len(schemaPkg))
+	}
+
+	scope := schemaPkg[0].Types.Scope()
+
+	obj := scope.Lookup(goInterfaceName)
+	if obj == nil {
+		return nil, errors.Errorf("interface %q not found", goInterfaceName)
+	}
+
+	iface, ok := obj.Type().Underlying().(*types.Interface)
+	if !ok {
+		return nil, errors.Errorf("%q is not an interface", goInterfaceName)
+	}
+
+	p := &parser{
 		schema:          &schema.WebRPCSchema{},
+		schemaPkgName:   schemaPkg[0].Name,
 		parsedTypes:     map[types.Type]*schema.VarType{},
 		parsedTypeNames: map[string]struct{}{},
 
 		// TODO: Change this to map[*types.Package]string so we can rename duplicated pkgs?
 		resolvedImports: map[string]struct{}{
 			// Initial schema file's package name artificially set by golang.org/x/tools/go/packages.
-			"command-line-arguments": struct{}{},
+			"command-line-arguments": {},
 		},
 	}
+
+	if err := p.parseInterfaceMethods(iface, goInterfaceName); err != nil {
+		return nil, errors.Wrapf(err, "failed to parser interface %q", goInterfaceName)
+	}
+
+	return p.schema, nil
 }
 
 // Parses Go source file and returns WebRPC schema.
@@ -38,38 +82,5 @@ type parser struct {
 	inlineMode      bool // When traversing `json:",inline"`, we don't want to store the struct type as WebRPC message.
 	resolvedImports map[string]struct{}
 
-	schemaPkgName string // Shema file's package name.
-}
-
-// Parses Go source file and return WebRPC schema.
-func (p *parser) Parse(filePath string) (*schema.WebRPCSchema, error) {
-	file, err := os.Stat(filePath)
-	if err != nil {
-		return nil, err
-	}
-	if file.Mode().IsRegular() {
-		// Parse all files in the given schema file's directory, so the parser can see all the pkg types.
-		filePath = path.Dir(filePath)
-	}
-
-	cfg := &packages.Config{
-		Dir:  filePath,
-		Mode: packages.NeedName | packages.NeedImports | packages.NeedTypes | packages.NeedFiles | packages.NeedDeps | packages.NeedSyntax,
-	}
-
-	schemaPkg, err := packages.Load(cfg, filePath)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to load packages")
-	}
-	if len(schemaPkg) != 1 {
-		return nil, errors.Errorf("failed to load initial package (len=%v)", len(schemaPkg))
-	}
-
-	p.schemaPkgName = schemaPkg[0].Name
-
-	if err := p.lookupAndParseInterface(schemaPkg[0].Types.Scope()); err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	return p.schema, nil
+	schemaPkgName string // Schema file's package name.
 }

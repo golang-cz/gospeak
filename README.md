@@ -10,7 +10,7 @@ The easiest way to communicate to your Golang server over HTTP.
 // rpc/api.go
 package rpc
 
-type User {
+type User struct {
     Uid string
     Name string
 }
@@ -26,8 +26,10 @@ type ExampleAPI interface{
 
 ### 2. Generate webrpc schema from the interface
 
+You can pass a single `.go` file or a folder (Go package) as the schema.
+
 ```sh
-go2webrpc -from=./rpc/with/schema -out webrpc.json
+go2webrpc -schema=./rpc -out webrpc.json
 ```
 
 ### 3. Generate server stub code
@@ -84,11 +86,6 @@ Golang client:
 webrpc-gen -schema=./webrpc.json -target=golang@v0.7.0 -Client -out pkg/example/apiClient.gen.go
 ```
 
-```go
-import "pkg/
-```
-
-
 TypeScript client:
 ```
 webrpc-gen -schema=./webrpc.json -target=typescript@v0.7.0 -Client -out ../frontend/src/exampleApi.gen.ts
@@ -101,6 +98,9 @@ OpenAPI 3.x (Swagger) documentation:
 webrpc-gen -schema=./webrpc.json -target=openapi@v0.7.0 -out ./openapi.yaml
 ```
 
+# Authors
+- [golang.cz](https://golang.cz)
+- [VojtechVitek](https://github.com/VojtechVitek)
 
 # License
 
