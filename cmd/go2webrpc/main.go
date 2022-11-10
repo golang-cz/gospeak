@@ -39,15 +39,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("SCHEMA: %+v", schema)
-
-	json, err := schema.ToJSON()
+	json, err := schema.ToJSON(true)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to print webrpc schema as JSON: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Println(json)
+	if *outFlag == "" {
+		fmt.Println(json)
+		os.Exit(0)
+	}
 
-	_ = outFlag
+	if err := os.WriteFile(*outFlag, []byte(json), 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to write to %q file: %v\n", *outFlag, err)
+		os.Exit(1)
+	}
 }

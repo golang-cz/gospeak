@@ -2,7 +2,6 @@ package go2webrpc
 
 import (
 	"go/types"
-	"log"
 	"os"
 	"path"
 
@@ -15,7 +14,7 @@ import (
 func Parse(filePath string, goInterfaceName string) (*schema.WebRPCSchema, error) {
 	file, err := os.Stat(filePath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to open -schema=%q", filePath)
 	}
 	if file.Mode().IsRegular() {
 		// Parse all files in the given schema file's directory, so the parser can see all the pkg types.
@@ -27,7 +26,6 @@ func Parse(filePath string, goInterfaceName string) (*schema.WebRPCSchema, error
 		Mode: packages.NeedName | packages.NeedImports | packages.NeedTypes | packages.NeedFiles | packages.NeedDeps | packages.NeedSyntax,
 	}
 
-	log.Printf("loading %v\n", filePath)
 	schemaPkg, err := packages.Load(cfg, filePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to load packages")
@@ -55,7 +53,7 @@ func Parse(filePath string, goInterfaceName string) (*schema.WebRPCSchema, error
 		parsedTypeNames: map[string]struct{}{},
 
 		// TODO: Change this to map[*types.Package]string so we can rename duplicated pkgs?
-		resolvedImports: map[string]struct{}{
+		importedPaths: map[string]struct{}{
 			// Initial schema file's package name artificially set by golang.org/x/tools/go/packages.
 			"command-line-arguments": {},
 		},
@@ -79,8 +77,8 @@ type parser struct {
 	parsedTypes     map[types.Type]*schema.VarType
 	parsedTypeNames map[string]struct{}
 
-	inlineMode      bool // When traversing `json:",inline"`, we don't want to store the struct type as WebRPC message.
-	resolvedImports map[string]struct{}
+	inlineMode    bool // When traversing `json:",inline"`, we don't want to store the struct type as WebRPC message.
+	importedPaths map[string]struct{}
 
 	schemaPkgName string // Schema file's package name.
 }

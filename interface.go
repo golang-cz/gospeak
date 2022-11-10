@@ -14,8 +14,6 @@ func (p *parser) parseInterfaceMethods(iface *types.Interface, name string) erro
 		Schema: p.schema, // denormalize/back-reference
 	}
 
-	fmt.Println(iface.NumMethods())
-
 	// Loop over the interface's methods.
 	for i := 0; i < iface.NumMethods(); i++ {
 		method := iface.Method(i)
