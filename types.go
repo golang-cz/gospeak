@@ -59,17 +59,34 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 		switch u := underlying.(type) {
 		// TODO: Aliases?
 
-		case *types.Slice, *types.Pointer:
-			// Named slice or pointer. Webrpc can't handle that.
+		case *types.Pointer:
+			// Named pointer. Webrpc can't handle that.
 			// Example:
-			// 1. `type NamedSlice []Obj`
-			// 2. `type NamedPtr *Obj`
+			//   `type NamedPtr *Obj`
 
-			// Go for the underlying type instead (ie. `[]Obj` or `*Obj`).
+			// Go for the underlying element type name (ie. `Obj`).
 			underlyingTypeName := underlying.String()                            // []github.com/golang-cz/go2webrpc/pkg.Obj
 			underlyingTypeName = filepath.Base(underlyingTypeName)               // pkg.Obj
 			underlyingTypeName = strings.ReplaceAll(underlyingTypeName, ".", "") // pkgObj
+			return p.parseNamedType(underlyingTypeName, u.Underlying())
 
+		case *types.Slice:
+			// Named slice. Webrpc can't handle that.
+			// Example:
+			//  `type NamedSlice []int`
+			//  `type NamedSlice []Obj`
+
+			// If the underlying element type is basic (ie. `int`), we don't
+			// want to name it in webrpc. Go for the basic type directly.
+			elem := u.Elem().Underlying()
+			if basic, ok := elem.(*types.Basic); ok {
+				return p.parseBasic(basic)
+			}
+
+			// Otherwise, go for the underlying element type name (ie. `Obj`).
+			underlyingTypeName := underlying.String()                            // []github.com/golang-cz/go2webrpc/pkg.Obj
+			underlyingTypeName = filepath.Base(underlyingTypeName)               // pkg.Obj
+			underlyingTypeName = strings.ReplaceAll(underlyingTypeName, ".", "") // pkgObj
 			return p.parseNamedType(underlyingTypeName, u.Underlying())
 		}
 

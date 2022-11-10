@@ -47,7 +47,11 @@ func Parse(filePath string, goInterfaceName string) (*schema.WebRPCSchema, error
 	}
 
 	p := &parser{
-		schema:          &schema.WebRPCSchema{},
+		schema: &schema.WebRPCSchema{
+			WebrpcVersion: "v1",
+			SchemaName:    goInterfaceName,
+			SchemaVersion: "vTODO",
+		},
 		schemaPkgName:   schemaPkg[0].Name,
 		parsedTypes:     map[types.Type]*schema.VarType{},
 		parsedTypeNames: map[string]struct{}{},
