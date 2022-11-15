@@ -144,10 +144,7 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 
 	case *types.Pointer:
 		if typeName == "" {
-			underlyingTypeName := v.String()                                     // *github.com/golang-cz/go2webrpc/pkg.Obj
-			underlyingTypeName = filepath.Base(underlyingTypeName)               // pkg.Obj
-			underlyingTypeName = strings.ReplaceAll(underlyingTypeName, ".", "") // pkgObj
-			return p.parseNamedType(underlyingTypeName, v.Elem())
+			return p.parseNamedType(p.getTypeName(v), v.Elem())
 		}
 		return p.parseNamedType(typeName, v.Elem())
 
