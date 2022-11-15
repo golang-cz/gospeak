@@ -37,20 +37,18 @@ func (p *parser) getTypeName(typ types.Type) string {
 }
 
 func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schema.VarType, err error) {
-	// Return an already parsed type from cache.
+	// Return a parsedType from cache, if exists.
 	if parsedType, ok := p.parsedTypes[typ]; ok {
 		return parsedType, nil
 	}
 
-	// Otherwise, create a new parsedType record in cache (claim the cache key)
-	// and fill in the value. Meanwhile, any following recursive call(s) to this
-	// function (ie. on recursive types like self-referencing structs, linked
-	// lists, graphs, circular dependencies etc.) will return the same pointer
-	// from cache.
+	// Otherwise, create a new parsedType record and warm up the cache up-front.
+	// Claim the cache key and fill in the value later in defer(). Meanwhile, any
+	// following recursive call(s) to this function (ie. on recursive types like
+	// self-referencing structs, linked lists, graphs, circular dependencies etc.)
+	// will return early with the same pointer.
+	//
 	// Note: We're parsing sequentially, no need for sync.Map.
-
-	// Warm up the cache up-front. We fill in the cache value in defer()
-	// from the actual return value (varType).
 	cacheDoNotReturn := &schema.VarType{
 		Expr: typeName,
 	}
@@ -58,7 +56,7 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 
 	defer func() {
 		if varType != nil {
-			*cacheDoNotReturn = *varType // Update the cache value via a pointer dereference.
+			*cacheDoNotReturn = *varType // Update the cache value via pointer dereference.
 			varType = cacheDoNotReturn
 		}
 	}()
@@ -151,17 +149,6 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 	default:
 		return nil, errors.Errorf("unsupported argument type %T", typ)
 	}
-}
-
-func resolveRenamedTypes(typ types.Type) types.Type {
-	for {
-		underlying, ok := typ.Underlying().(*types.Named)
-		if !ok {
-			break
-		}
-		typ = underlying
-	}
-	return typ
 }
 
 func (p *parser) parseBasic(typ *types.Basic) (*schema.VarType, error) {
