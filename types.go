@@ -161,20 +161,6 @@ func (p *parser) parseBasic(typ *types.Basic) (*schema.VarType, error) {
 }
 
 func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (varType *schema.VarType, err error) {
-	// typeName is for example "github.com/webrpc/webrpc/schema/VarType"
-	// Split by separators & get the shortest possible unique prefixed type name (ie. schemaVarType).
-	typeNameParts := strings.FieldsFunc(typeName, func(r rune) bool {
-		return r == '.' || r == '/' || r == '-' || r == '_'
-	})
-	typeName = ""
-	for i := len(typeNameParts) - 1; i >= 0; i-- {
-		typeName = typeNameParts[i] + typeName
-		if _, ok := p.parsedTypeNames[typeName]; !ok {
-			p.parsedTypeNames[typeName] = struct{}{}
-			break
-		}
-	}
-
 	msg := &schema.Message{
 		Name: schema.VarName(typeName),
 		Type: schema.MessageType("struct"),
