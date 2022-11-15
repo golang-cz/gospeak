@@ -63,7 +63,9 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 
 	switch v := typ.(type) {
 	case *types.Named:
+		pkg := v.Obj().Pkg()
 		underlying := v.Underlying()
+		typeName := p.getTypeName(typ)
 
 		switch u := underlying.(type) {
 		// TODO: Aliases?
@@ -82,45 +84,80 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 			//  `type NamedSlice []int`
 			//  `type NamedSlice []Obj`
 
-			// If the underlying element type is basic (ie. `int`), we don't
-			// want to name it in webrpc. Go for the basic type directly.
+			// If the named type is slice and implements encoding.TextMarshaler,
+			// we assume it's []string.
+			if isTextMarshaler(v, pkg) {
+				return &schema.VarType{
+					Expr: "[]string",
+					Type: schema.T_List,
+					List: &schema.VarListType{
+						Elem: &schema.VarType{
+							Expr: "string",
+							Type: schema.T_String,
+						},
+					},
+				}, nil
+			}
+
+			// If the named type is slice and implements json.Marshaler,
+			// we assume it's []any.
+			if isJsonMarshaller(v, pkg) {
+				return &schema.VarType{
+					Expr: "[]any",
+					Type: schema.T_List,
+					List: &schema.VarListType{
+						Elem: &schema.VarType{
+							Expr: "any",
+							Type: schema.T_Any,
+						},
+					},
+				}, nil
+			}
+
+			// If the named type is slice and the underlying element
+			// type is basic type (ie. `int`), we go for it directly.
 			elem := u.Elem().Underlying()
 			if basic, ok := elem.(*types.Basic); ok {
-				return p.parseBasic(basic)
+				basicType, err := p.parseBasic(basic)
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to parse []namedBasicType")
+				}
+				return &schema.VarType{
+					Expr: fmt.Sprintf("[]%v", basicType.String()),
+					Type: schema.T_List,
+					List: &schema.VarListType{
+						Elem: basicType,
+					},
+				}, nil
 			}
 
 			// Otherwise, go for the underlying element type name (ie. `Obj`).
 			return p.parseNamedType(p.getTypeName(underlying), u.Underlying())
 		}
 
-		pkg := v.Obj().Pkg()
+		if isTextMarshaler(v, pkg) {
+			return &schema.VarType{
+				Expr: "string",
+				Type: schema.T_String,
+			}, nil
+		}
+
+		if isJsonMarshaller(v, pkg) {
+			return &schema.VarType{
+				Expr: "any",
+				Type: schema.T_Any,
+			}, nil
+		}
+
 		if pkg == nil {
 			return p.parseNamedType(typeName, underlying)
 		}
 
-		typeName := p.getTypeName(typ)
-
-		// Does the type satisfy encoding.TextMarshaller and encoding.TextUnmarshaler interfaces?
-		// Then its value is always rendered as a quoted string in JSON encoding. Return string.
-		// TODO: Actually.. should this be `any`?
-		marshalTextMethod, _, _ := types.LookupFieldOrMethod(v, true, pkg, "MarshalText")
-		unmarshalTextMethod, _, _ := types.LookupFieldOrMethod(v, true, pkg, "UnmarshalText")
-		if marshalTextMethod != nil && unmarshalTextMethod != nil &&
-			strings.HasSuffix(marshalTextMethod.String(), ".MarshalText() ([]byte, error)") &&
-			strings.HasSuffix(unmarshalTextMethod.String(), ".UnmarshalText(text []byte) error") {
-			var v schema.VarType
-			if err := schema.ParseVarTypeExpr(p.schema, "string", &v); err != nil {
-				return nil, errors.Wrap(err, "failed to parse string")
-			}
-			return &v, nil
-		}
-
 		if pkg.Path() == "time" && typeName == "timeTime" {
-			var v schema.VarType
-			if err := schema.ParseVarTypeExpr(p.schema, "timestamp", &v); err != nil {
-				return nil, errors.Wrap(err, "failed to parse timestamp")
-			}
-			return &v, nil
+			return &schema.VarType{
+				Expr: "timestamp",
+				Type: schema.T_Timestamp,
+			}, nil
 		}
 
 		return p.parseNamedType(typeName, underlying)
@@ -328,4 +365,32 @@ func (p *parser) parseMap(typeName string, m *types.Map) (*schema.VarType, error
 	}
 
 	return varType, nil
+}
+
+// Returns true if the given type implements encoding.TextMarshaler
+// and encoding.TextUnmarshaler interfaces.
+func isTextMarshaler(typ types.Type, pkg *types.Package) bool {
+	marshalTextMethod, _, _ := types.LookupFieldOrMethod(typ, true, pkg, "MarshalText")
+	unmarshalTextMethod, _, _ := types.LookupFieldOrMethod(typ, true, pkg, "UnmarshalText")
+	if marshalTextMethod != nil &&
+		unmarshalTextMethod != nil &&
+		strings.HasSuffix(marshalTextMethod.String(), ".MarshalText() ([]byte, error)") &&
+		strings.HasSuffix(unmarshalTextMethod.String(), ".UnmarshalText(text []byte) error") {
+		return true
+	}
+	return false
+}
+
+// Returns true if the given type implements json.Marshaler and
+// json.Unmarshaler interfaces.
+func isJsonMarshaller(typ types.Type, pkg *types.Package) bool {
+	marshalJSONMethod, _, _ := types.LookupFieldOrMethod(typ, true, pkg, "MarshalJSON")
+	unmarshalJSONMethod, _, _ := types.LookupFieldOrMethod(typ, true, pkg, "UnmarshalJSON")
+	if marshalJSONMethod != nil &&
+		unmarshalJSONMethod != nil &&
+		strings.HasSuffix(marshalJSONMethod.String(), ".MarshalJSON() ([]byte, error)") &&
+		strings.HasSuffix(unmarshalJSONMethod.String(), ".UnmarshalJSON(text []byte) error") {
+		return true
+	}
+	return false
 }
