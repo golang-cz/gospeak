@@ -28,11 +28,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *interfaceFlag == "" {
-		fmt.Fprintln(os.Stderr, "-interface flag is required")
-		os.Exit(1)
-	}
-
 	schema, err := go2webrpc.Parse(*schemaFlag, *interfaceFlag)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to parse Go schema: %v\n", err)

@@ -4,6 +4,7 @@ import (
 	"go/types"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/webrpc/webrpc/schema"
@@ -41,14 +42,18 @@ func Parse(filePath string, goInterfaceName string) (*schema.WebRPCSchema, error
 
 	scope := schemaPkg[0].Types.Scope()
 
+	if goInterfaceName == "" {
+		return nil, errors.Errorf("-interface is required (list of interfaces: %v)", strings.Join(listInterfaces(scope), ", "))
+	}
+
 	obj := scope.Lookup(goInterfaceName)
 	if obj == nil {
-		return nil, errors.Errorf("interface %q not found (found: %v)", goInterfaceName, scope.Names())
+		return nil, errors.Errorf("interface %q not found (list of interfaces: %v)", goInterfaceName, strings.Join(listInterfaces(scope), ", "))
 	}
 
 	iface, ok := obj.Type().Underlying().(*types.Interface)
 	if !ok {
-		return nil, errors.Errorf("%q is not an interface", goInterfaceName)
+		return nil, errors.Errorf("%q is %T (list of interfaces: %v)", goInterfaceName, obj.Type().Underlying(), strings.Join(listInterfaces(scope), ", "))
 	}
 
 	p := &parser{
@@ -73,6 +78,24 @@ func Parse(filePath string, goInterfaceName string) (*schema.WebRPCSchema, error
 	}
 
 	return p.schema, nil
+}
+
+func listInterfaces(scope *types.Scope) []string {
+	interfaces := []string{}
+
+	for _, name := range scope.Names() {
+		obj := scope.Lookup(name)
+		if obj == nil {
+			continue
+		}
+
+		_, ok := obj.Type().Underlying().(*types.Interface)
+		if ok {
+			interfaces = append(interfaces, name)
+		}
+	}
+
+	return interfaces
 }
 
 // Parses Go source file and returns WebRPC schema.
