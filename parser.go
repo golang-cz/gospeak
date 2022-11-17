@@ -3,7 +3,7 @@ package go2webrpc
 import (
 	"go/types"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/webrpc/webrpc/schema"
@@ -12,33 +12,38 @@ import (
 
 // Parse Go source file or package folder and return WebRPC schema.
 func Parse(filePath string, goInterfaceName string) (*schema.WebRPCSchema, error) {
-	file, err := os.Stat(filePath)
+	path, err := filepath.Abs(filePath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to open -schema=%q", filePath)
+		return nil, errors.Wrapf(err, "failed to get directory from -schema=%q", path)
+	}
+
+	file, err := os.Stat(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to open -schema=%q", path)
 	}
 	if file.Mode().IsRegular() {
-		// Parse all files in the given schema file's directory, so the parser can see all the pkg types.
-		filePath = path.Dir(filePath)
+		// Parse all files in the given schema file's directory, so the parser can see all the pkg files.
+		path = filepath.Dir(path)
 	}
 
 	cfg := &packages.Config{
-		Dir:  filePath,
+		Dir:  path,
 		Mode: packages.NeedName | packages.NeedImports | packages.NeedTypes | packages.NeedFiles | packages.NeedDeps | packages.NeedSyntax,
 	}
 
-	schemaPkg, err := packages.Load(cfg, filePath)
+	schemaPkg, err := packages.Load(cfg, path)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to load packages")
+		return nil, errors.Wrapf(err, "failed to load Go packages from %q", path)
 	}
 	if len(schemaPkg) != 1 {
-		return nil, errors.Errorf("failed to load initial package (len=%v)", len(schemaPkg))
+		return nil, errors.Errorf("failed to load Go package (len=%v) from %q", len(schemaPkg), path)
 	}
 
 	scope := schemaPkg[0].Types.Scope()
 
 	obj := scope.Lookup(goInterfaceName)
 	if obj == nil {
-		return nil, errors.Errorf("interface %q not found", goInterfaceName)
+		return nil, errors.Errorf("interface %q not found (found: %v)", goInterfaceName, scope.Names())
 	}
 
 	iface, ok := obj.Type().Underlying().(*types.Interface)

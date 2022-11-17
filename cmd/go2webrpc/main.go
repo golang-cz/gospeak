@@ -12,8 +12,8 @@ var flags = flag.NewFlagSet("go2webrpc", flag.ExitOnError)
 
 func main() {
 	versionFlag := flags.Bool("version", false, "print go2webrpc version and exit")
-	schemaFlag := flags.String("schema", "", "Path to Go file / package folder (required)")
-	interfaceFlag := flags.String("interface", "", "Name of the interface (required)")
+	schemaFlag := flags.String("schema", "", "path to Go package (required)")
+	interfaceFlag := flags.String("interface", "", "Go interface name (required)")
 	outFlag := flags.String("out", "", "generated output file (optional, default: stdout)")
 
 	flags.Parse(os.Args[1:])
