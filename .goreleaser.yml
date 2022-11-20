@@ -6,11 +6,9 @@ builds:
     binary: go2webrpc
     goos:
       - darwin
-      - freebsd
       - linux
       - windows
     goarch:
-      - 386
       - amd64
       - arm64
 
@@ -24,3 +22,16 @@ checksum:
 changelog:
   use: github
   sort: asc
+
+brews:
+  - name: go2webrpc
+    tap:
+      owner: golang-cz
+      name: homebrew-tap
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    #homepage: "https://example.com/"
+    description: "go2webrpc, Golang interface as your schema for client/server communication"
+    license: "MIT"
