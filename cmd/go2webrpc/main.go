@@ -8,7 +8,10 @@ import (
 	"github.com/golang-cz/go2webrpc"
 )
 
-var flags = flag.NewFlagSet("go2webrpc", flag.ExitOnError)
+var (
+	VERSION = "v0.0.x-dev"
+	flags   = flag.NewFlagSet("go2webrpc", flag.ExitOnError)
+)
 
 func main() {
 	versionFlag := flags.Bool("version", false, "print go2webrpc version and exit")
@@ -19,7 +22,7 @@ func main() {
 	flags.Parse(os.Args[1:])
 
 	if *versionFlag {
-		fmt.Printf("go2webrpc %s\n", go2webrpc.VERSION)
+		fmt.Printf("go2webrpc %s\n", VERSION)
 		os.Exit(0)
 	}
 
