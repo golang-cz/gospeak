@@ -12,7 +12,7 @@ builds:
       - amd64
       - arm64
     ldflags:
-      - -s -w -X github.com/golang-cz/go2webrpc/cmd/go2webrpc/main.VERSION=v{{.Version}}
+      - -s -w -X main.VERSION=v{{.Version}}
 
 archives:
   - name_template: "{{ .Binary }}.{{ .Os }}-{{ .Arch }}"
