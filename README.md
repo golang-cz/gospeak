@@ -1,26 +1,36 @@
-# Golang interface as your schema for client/server communication
+# GoSpeak - Go `interface{}` as your API
 
-The easiest way to communicate to your Golang server over HTTP.
+What if Go `interface{}` was your schema for service-to-service communication? What if you could generate REST API server code, documentation and strongly typed clients in Go/TypesScript/JavaScript in seconds? What if you could use Go channels over network easily?
+
+Introducing **GoSpeak**, a lightweight JSON alternative to gRPC and Twirp, where Go `interface{}` is your protobuf schema. GoSpeak uses [webrpc](https://github.com/webrpc/webrpc) schema behind the scenes.
 
 ## Example
 
-### 1. Define schema as Golang interface
+1. Define Go `interface{}` API
+2. Generate REST API server (HTTP handlers with JSON)
+3. Implement the `interface{}` methods (server code)
+4. `http.ListenAndServe(port, rpcServer)`
+5. Generate strongly typed clients in Go/TypeScript/JavaScript
+6. Generate OpenAPI 3.x (Swagger) documentation
+
+### 2. Define your `interface{}` API
 
 ```go
 // rpc/api.go
 package rpc
 
+// go:generate webrpc
+
+type ExampleAPI interface{
+    GetSession(ctx context.Context) (user *User, err error)
+
+    Get(ctx context.Context, uid string) (user *User, err error)
+    ListUsers(ctx context.Context) (users []*User, err error)
+}
+
 type User struct {
     Uid string
     Name string
-}
-
-type ExampleAPI interface{
-    GetUser(ctx context.Context, uid string) (user *User, err error)
-    ListUsers(ctx context.Context) (users []*User, err error)
-    CreateUser(ctx context.Context, userReq *User) (user *User, err error)
-    UpdateUser(ctx context.Context, userReq *User) (user *User, err error)
-    DeleteUser(ctx context.Context, userReq *User) (err error)
 }
 ```
 
@@ -46,7 +56,7 @@ Generate server code including:
 webrpc-gen -schema=./webrpc.json -target=golang@v0.7.0 -Server -out rpc/server.gen.go
 ```
 
-### 4. Implement interface methods (server code)
+### 4. Implement the interface methods (server code)
 
 ```go
 // rpc/user.go
