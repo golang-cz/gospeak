@@ -9,7 +9,7 @@ RUN apk add --update git
 ADD ./ /src
 
 WORKDIR /src
-RUN go build -ldflags="-s -w -X main.VERSION=${VERSION}" -o /usr/bin/go2webrpc ./cmd/go2webrpc
+RUN go build -ldflags="-s -w -X main.VERSION=${VERSION}" -o /usr/bin/gospeak ./cmd/gospeak
 
 # -----------------------------------------------------------------
 # Runner
@@ -20,6 +20,6 @@ ENV TZ=UTC
 
 RUN apk add --no-cache --update ca-certificates
 
-COPY --from=builder /usr/bin/go2webrpc /usr/bin/
+COPY --from=builder /usr/bin/gospeak /usr/bin/
 
-ENTRYPOINT ["/usr/bin/go2webrpc"]
+ENTRYPOINT ["/usr/bin/gospeak"]

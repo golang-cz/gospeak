@@ -1,3 +1,3 @@
-module github.com/golang-cz/go2webrpc/_examples/userStore
+module github.com/golang-cz/gospeak/_examples/userStore
 
 go 1.19

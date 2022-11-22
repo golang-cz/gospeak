@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/golang-cz/go2webrpc"
+	"github.com/golang-cz/gospeak"
 )
 
 var (
 	VERSION = "v0.0.x-dev"
-	flags   = flag.NewFlagSet("go2webrpc", flag.ExitOnError)
+	flags   = flag.NewFlagSet("gospeak", flag.ExitOnError)
 )
 
 func main() {
-	versionFlag := flags.Bool("version", false, "print go2webrpc version and exit")
+	versionFlag := flags.Bool("version", false, "print gospeak version and exit")
 	schemaFlag := flags.String("schema", "", "path to Go package (required)")
 	interfaceFlag := flags.String("interface", "", "Go interface name (required)")
 	outFlag := flags.String("out", "", "generated output file (optional, default: stdout)")
@@ -22,7 +22,7 @@ func main() {
 	flags.Parse(os.Args[1:])
 
 	if *versionFlag {
-		fmt.Printf("go2webrpc %s\n", VERSION)
+		fmt.Printf("gospeak %s\n", VERSION)
 		os.Exit(0)
 	}
 
@@ -31,7 +31,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	schema, err := go2webrpc.Parse(*schemaFlag, *interfaceFlag)
+	schema, err := gospeak.Parse(*schemaFlag, *interfaceFlag)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to parse Go schema: %v\n", err)
 		os.Exit(1)

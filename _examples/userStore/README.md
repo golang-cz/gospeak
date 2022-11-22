@@ -5,7 +5,7 @@
     ```
     $ go generate -x ./...
 
-    go2webrpc -schema=./api.go -interface=ExampleAPI -out=./webrpc.json
+    gospeak -schema=./api.go -interface=ExampleAPI -out=./webrpc.json
     webrpc-gen -schema=./webrpc.json -target=golang -server -pkg=rpc -out=../server.gen.go
     webrpc-gen -schema=./webrpc.json -target=golang -client -pkg=users -out=../../pkg/users/client.gen.go
     ```

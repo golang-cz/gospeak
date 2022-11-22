@@ -38,7 +38,7 @@ type User struct {
 You can pass a single `.go` file or a folder (Go package) as the schema.
 
 ```sh
-go2webrpc -schema=./rpc -out webrpc.json
+gospeak -schema=./rpc -out webrpc.json
 ```
 
 ### 3. Generate server stub code

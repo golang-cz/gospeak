@@ -1,4 +1,4 @@
-package go2webrpc
+package gospeak
 
 import (
 	"fmt"

@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/golang-cz/go2webrpc/_examples/userStore/server"
+	"github.com/golang-cz/gospeak/_examples/userStore/server"
 )
 
 func main() {

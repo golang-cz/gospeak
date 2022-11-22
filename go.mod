@@ -1,4 +1,4 @@
-module github.com/golang-cz/go2webrpc
+module github.com/golang-cz/gospeak
 
 go 1.19
 

@@ -2,7 +2,7 @@ package schema
 
 import "context"
 
-//go:generate go2webrpc -schema=./api.go -interface=UserStore -out=./webrpc.gen.json
+//go:generate gospeak -schema=./api.go -interface=UserStore -out=./webrpc.gen.json
 //go:generate webrpc-gen -schema=./webrpc.gen.json -target=golang -server -pkg=server -out=../server/server.gen.go
 //go:generate webrpc-gen -schema=./webrpc.gen.json -target=golang -client -pkg=client -out=../client/client.gen.go
 
