@@ -1,7 +1,7 @@
 # GoSpeak userStore example
 
-1. Read/update [schema/api.go](./schema/api.go).
-2. Run `go generate`
+1. Read/update [schema/api.go](./schema/api.go)
+2. Generate client/server code
     ```
     $ go generate -x ./...
 

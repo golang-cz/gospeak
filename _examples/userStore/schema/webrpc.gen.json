@@ -1,6 +1,6 @@
 {
  "webrpc": "v1",
- "name": "ExampleAPI",
+ "name": "UserStore",
  "version": "vTODO",
  "imports": null,
  "messages": [
@@ -9,7 +9,14 @@
    "type": "struct",
    "fields": [
     {
-     "name": "Uid",
+     "name": "ID",
+     "type": "int64",
+     "optional": false,
+     "value": "",
+     "meta": null
+    },
+    {
+     "name": "UID",
      "type": "string",
      "optional": false,
      "value": "",
@@ -27,28 +34,28 @@
  ],
  "services": [
   {
-   "name": "ExampleAPI",
+   "name": "UserStore",
    "methods": [
     {
-     "name": "Get",
+     "name": "DeleteUser",
      "inputs": [
       {
-       "name": "uid",
-       "type": "string",
+       "name": "ID",
+       "type": "int64",
        "optional": false
       }
      ],
-     "outputs": [
-      {
-       "name": "user",
-       "type": "User",
-       "optional": false
-      }
-     ]
+     "outputs": []
     },
     {
-     "name": "GetSession",
-     "inputs": [],
+     "name": "GetUser",
+     "inputs": [
+      {
+       "name": "ID",
+       "type": "int64",
+       "optional": false
+      }
+     ],
      "outputs": [
       {
        "name": "user",
@@ -64,6 +71,23 @@
       {
        "name": "users",
        "type": "[]User",
+       "optional": false
+      }
+     ]
+    },
+    {
+     "name": "UpsertUser",
+     "inputs": [
+      {
+       "name": "new",
+       "type": "User",
+       "optional": false
+      }
+     ],
+     "outputs": [
+      {
+       "name": "user",
+       "type": "User",
        "optional": false
       }
      ]

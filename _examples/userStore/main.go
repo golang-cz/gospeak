@@ -3,11 +3,14 @@ package main
 import (
 	"net/http"
 
-	"github.com/golang-cz/go2webrpc/_examples/userStore/rpc"
+	"github.com/golang-cz/go2webrpc/_examples/userStore/server"
 )
 
 func main() {
-	server := &rpc.RPC{}
+	rpc := &server.RPC{
+		UserStore: map[int64]*server.User{},
+	}
 
-	http.ListenAndServe(":8080", rpc.NewExampleAPIServer(server))
+	apiServer := server.NewUserStoreServer(rpc)
+	http.ListenAndServe(":8080", apiServer)
 }

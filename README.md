@@ -19,13 +19,11 @@ Introducing **GoSpeak**, a lightweight JSON alternative to gRPC and Twirp, where
 // rpc/api.go
 package rpc
 
-// go:generate webrpc
-
-type ExampleAPI interface{
-    GetSession(ctx context.Context) (user *User, err error)
-
-    Get(ctx context.Context, uid string) (user *User, err error)
-    ListUsers(ctx context.Context) (users []*User, err error)
+type UserStore interface {
+	UpsertUser(ctx context.Context, user *User) (*User,  error)
+	GetUser(ctx context.Context, ID int64) (*User, error)
+	ListUsers(ctx context.Context) ([]*User, error)
+	DeleteUser(ctx context.Context, ID int64) error
 }
 
 type User struct {
@@ -47,7 +45,7 @@ go2webrpc -schema=./rpc -out webrpc.json
 Generate server code including:
 
 - HTTP handler for the generated `/rpc/*` REST API routes
-  - `func NewExampleAPIServer(serverImplementation ExampleAPI) http.Handler`
+  - `func NewUserStoreServer(serverImplementation UserStore) http.Handler`
   - Automatically (un)marshals JSON request/response body into Go variables
   - Calls your implementation of the method
 - Errors that render HTTP codes
@@ -81,11 +79,13 @@ func (s *RPC) GetUser(ctx context.Context, uid string) (user *User, err error) {
 package main
 
 func main() {
-    server := &rpc.RPC{
-        // DB: databaseModels,
-    }
+   	rpc := &server.RPC{
+		UserStore: map[int64]*server.User{},
+        // Data models, DB connection etc.
+	}
 
-    http.ListenAndServe(":8080", rpc.NewExampleAPIServer(server))
+	apiServer := server.NewUserStoreServer(rpc)
+	http.ListenAndServe(":8080", apiServer)
 }
 ```
 
