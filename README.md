@@ -2,19 +2,19 @@
 
 What if Go `interface{}` was your schema for service-to-service communication? What if you could generate REST API server code, documentation and strongly typed clients in Go/TypesScript/JavaScript in seconds? What if you could use Go channels over network easily?
 
-Introducing **GoSpeak**, a lightweight JSON alternative to gRPC and Twirp, where Go `interface{}` is your protobuf schema. GoSpeak uses [webrpc](https://github.com/webrpc/webrpc) protocol and code-generation suite behind the scenes.
+Introducing **GoSpeak**, a lightweight JSON alternative to gRPC and Twirp, where Go `interface{}` is your protobuf schema. GoSpeak is built on top of [webrpc](https://github.com/webrpc/webrpc) JSON protocol & code-generation suite.
 
 ## Example
 
-1. Define Go `interface{}` API
-2. Generate REST API server (HTTP handlers with JSON)
-3. Implement the `interface{}` (server business logic)
+1. Define your API schema with Go `interface{}`
+2. Generate REST API server
+3. Implement `interface{}` (server business logic)
 4. Serve the REST API
 5. Generate strongly typed clients in Go/TypeScript/JavaScript
 6. Generate OpenAPI 3.x (Swagger) documentation
 7. Enjoy!
 
-### 2. Define Go `interface{}` API schema
+### 2. Define your API schema with Go `interface{}`
 
 ```go
 package schema
@@ -41,7 +41,7 @@ You can pass a single `.go` file or a folder (Go package) as the schema.
 gospeak -schema=./rpc -out webrpc.json
 ```
 
-### 3. Generate server stub code
+### 3. Generate REST API server
 
 Generate server code including:
 
@@ -56,7 +56,7 @@ Generate server code including:
 webrpc-gen -schema=./webrpc.json -target=golang@v0.7.0 -Server -out server/server.gen.go
 ```
 
-### 4. Implement the interface (server business logic)
+### 4. Implement `interface{}` (server business logic)
 
 ```go
 // rpc/user.go
@@ -109,6 +109,10 @@ OpenAPI 3.x (Swagger) documentation:
 ```
 webrpc-gen -schema=./webrpc.json -target=openapi@v0.7.0 -out ./openapi.yaml
 ```
+
+### 6. Enjoy!
+
+..and let us know what you think in [discussions](https://github.com/golang-cz/gospeak/discussions).
 
 # Authors
 - [golang.cz](https://golang.cz)
