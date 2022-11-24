@@ -7,12 +7,14 @@ Introducing **GoSpeak**, a lightweight JSON alternative to gRPC and Twirp, where
 ## Example
 
 1. Define your API schema with Go `interface{}`
-2. Generate REST API server
-3. Implement `interface{}` (server business logic)
-4. Serve the REST API
-5. Generate strongly typed clients in Go/TypeScript/JavaScript
-6. Generate OpenAPI 3.x (Swagger) documentation
-7. Enjoy!
+2. Install [gospeak](./releases) and [webrpc-gen](https://github.com/webrpc/webrpc/releases)
+3. Generate `webrpc.json` schema from the `interface{}`
+4. Generate REST API server handlers
+5. Implement `interface{}` (server business logic)
+6. Serve the REST API
+7. Generate strongly typed clients in Go/TypeScript/JavaScript
+8. Generate OpenAPI 3.x (Swagger) documentation
+9. Enjoy!
 
 ### 2. Define your API schema with Go `interface{}`
 
@@ -33,7 +35,11 @@ type User struct {
 }
 ```
 
-### 2. Generate webrpc.json schema from the `interface{}`
+### 2. Install gospeak and webrpc-gen
+
+See [gospeak](./releases) and [webrpc-gen](https://github.com/webrpc/webrpc/releases) releases.
+
+### 3. Generate webrpc.json schema from the `interface{}`
 
 You can pass a single `.go` file or a folder (Go package) as the schema.
 
@@ -41,7 +47,7 @@ You can pass a single `.go` file or a folder (Go package) as the schema.
 gospeak -schema=./rpc -out webrpc.json
 ```
 
-### 3. Generate REST API server
+### 4. Generate REST API server handlers
 
 Generate server code including:
 
@@ -56,7 +62,7 @@ Generate server code including:
 webrpc-gen -schema=./webrpc.json -target=golang@v0.7.0 -Server -out server/server.gen.go
 ```
 
-### 4. Implement `interface{}` (server business logic)
+### 5. Implement `interface{}` (server business logic)
 
 ```go
 // rpc/user.go
@@ -75,7 +81,7 @@ func (s *RPC) GetUser(ctx context.Context, uid string) (user *User, err error) {
 }
 ```
 
-### 5. Serve the REST API
+### 6. Serve the REST API
 
 ```go
 package main
@@ -91,7 +97,7 @@ func main() {
 }
 ```
 
-### 6. Generate API clients
+### 7. Generate API clients
 
 Golang client:
 ```
@@ -103,14 +109,14 @@ TypeScript client:
 webrpc-gen -schema=./webrpc.json -target=typescript@v0.7.0 -Client -out ../frontend/src/exampleApi.gen.ts
 ```
 
-### 6. Generate API documentation
+### 8. Generate API documentation
 
 OpenAPI 3.x (Swagger) documentation:
 ```
 webrpc-gen -schema=./webrpc.json -target=openapi@v0.7.0 -out ./openapi.yaml
 ```
 
-### 6. Enjoy!
+### 9. Enjoy!
 
 ..and let us know what you think in [discussions](https://github.com/golang-cz/gospeak/discussions).
 
