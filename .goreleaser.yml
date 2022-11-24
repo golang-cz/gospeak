@@ -25,6 +25,18 @@ changelog:
   use: github
   sort: asc
 
+release:
+  header: |
+    ## Docker
+    ```
+    docker run ghcr.io/webrpc/webrpc-gen:v{{.Version}}
+    ```
+
+    ## Homebrew
+    ```
+    brew install webrpc/tap/webrpc-gen
+    ```
+
 brews:
   - name: gospeak
     tap:
