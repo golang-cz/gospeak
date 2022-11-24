@@ -7,7 +7,7 @@ Introducing **GoSpeak**, a lightweight JSON alternative to gRPC and Twirp, where
 ## Example
 
 1. Define your API schema with Go `interface{}`
-2. Install [gospeak](./releases) and [webrpc-gen](https://github.com/webrpc/webrpc/releases)
+2. Install [gospeak](https://github.com/golang-cz/gospeak/releases) and [webrpc-gen](https://github.com/webrpc/webrpc/releases)
 3. Generate `webrpc.json` schema from the `interface{}`
 4. Generate REST API server handlers
 5. Implement `interface{}` (server business logic)
