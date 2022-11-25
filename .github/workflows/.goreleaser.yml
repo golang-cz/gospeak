@@ -1,0 +1,62 @@
+# See docs at https://goreleaser.com/customization/build
+project_name: gospeak
+
+builds:
+  - main: ./cmd/gospeak
+    binary: gospeak
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.VERSION=v{{.Version}}
+
+archives:
+  - name_template: "{{ .Binary }}.{{ .Os }}-{{ .Arch }}"
+    format: binary
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  use: github
+  sort: asc
+
+release:
+  footer: |
+    ## Docker
+    ```
+    docker run ghcr.io/golang-cz/gospeak:v{{.Version}}
+    ```
+
+    ## Homebrew
+    ```
+    brew install golang-cz/tap/gospeak
+    ```
+
+    ## Build from source
+    ```
+    go install -ldflags="-s -w -X github.com/golang-cz/gospeak/cmd/gospeak.VERSION=v{{.Version}}" github.com/golang-cz/gospeak/cmd/gospeak@v{{.Version}}
+    ```
+
+    ## Download binaries
+    macOS: [arm64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.darwin-arm64) (Apple Silicon), [amd64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.darwin-amd64)
+    Linux: [arm64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.linux-arm64), [amd64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.linux-amd64)
+    Windows: [arm64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.windows-arm64.exe), [amd64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.windows-amd64.exe)
+
+brews:
+  - name: gospeak
+    tap:
+      owner: golang-cz
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    #homepage: "https://example.com/"
+    description: "gospeak, Golang interface as your schema for client/server communication"
+    license: "MIT"
