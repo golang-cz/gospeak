@@ -43,9 +43,9 @@ release:
     ```
 
     ## Download binaries
-    macOS: [arm64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.darwin-arm64) (Apple Silicon), [amd64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.darwin-amd64)
-    Linux: [arm64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.linux-arm64), [amd64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.linux-amd64)
-    Windows: [arm64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.windows-arm64.exe), [amd64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.windows-amd64.exe)
+    macOS: [amd64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.darwin-amd64), [arm64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.darwin-arm64) (Apple Silicon)
+    Linux: [amd64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.linux-amd64), [arm64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.linux-arm64)
+    Windows: [amd64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.windows-amd64.exe), [arm64](https://github.com/golang-cz/gospeak/releases/download/v{{.Version}}/gospeak.windows-arm64.exe)
 
 brews:
   - name: gospeak
