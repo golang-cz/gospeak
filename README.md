@@ -7,16 +7,12 @@ Introducing **GoSpeak**, a lightweight JSON alternative to gRPC and Twirp, where
 ## Example
 
 1. Define your API schema with Go `interface{}`
-2. Install [gospeak](https://github.com/golang-cz/gospeak/releases) and [webrpc-gen](https://github.com/webrpc/webrpc/releases)
-3. Generate `webrpc.json` schema from the `interface{}`
-4. Generate REST API server handlers
-5. Implement `interface{}` (server business logic)
-6. Serve the REST API
-7. Generate strongly typed clients in Go/TypeScript/JavaScript
-8. Generate OpenAPI 3.x (Swagger) documentation
-9. Enjoy!
+2. Generate code (server handlers, Go/TS clients, API docs)
+3. Implement `interface{}` (server business logic)
+4. Serve the REST API
+5. Enjoy!
 
-### 2. Define your API schema with Go `interface{}`
+### 1. Define your API schema with Go `interface{}`
 
 ```go
 package schema
@@ -35,34 +31,34 @@ type User struct {
 }
 ```
 
-### 2. Install gospeak and webrpc-gen
+### 2. Generate code (server handlers, Go/TS clients, API docs)
 
-See [gospeak](./releases) and [webrpc-gen](https://github.com/webrpc/webrpc/releases) releases.
+Install [gospeak](./releases) and generate your server code (HTTP handlers), strongly typed clients (Go/TypeScript) and documentation in OpenAPI 3.x (Swagger) API.
 
-### 3. Generate webrpc.json schema from the `interface{}`
+```bash
+#!/bin/bash
 
-You can pass a single `.go` file or a folder (Go package) as the schema.
-
-```sh
-gospeak -schema=./rpc -out webrpc.json
+gospeak ./schema/api.go \
+  golang -server -pkg server -out ./server/server.gen.go \
+  golang -client -pkg client -out ./client/client.gen.go \
+  typescript -client -out ../frontend/src/client.gen.ts \
+  openapi -out ./openapi.yaml
 ```
 
-### 4. Generate REST API server handlers
+#### Generate server code
 
-Generate server code including:
-
-- REST API router
+- HTTP handler with REST API router
   - `func NewUserStoreServer(serverImplementation UserStore) http.Handler`
   - HTTP handler for all RPC methods
   - Automatic JSON request/response body (un)marshaling
-  - Incoming requests call your server implementation
+  - Incoming requests call your RPC methods implementation (server logic)
 - Sentinel errors that render HTTP codes
 
 ```
 webrpc-gen -schema=./webrpc.json -target=golang@v0.7.0 -Server -out server/server.gen.go
 ```
 
-### 5. Implement `interface{}` (server business logic)
+### 3. Implement `interface{}` (server business logic)
 
 ```go
 // rpc/user.go
@@ -81,7 +77,7 @@ func (s *RPC) GetUser(ctx context.Context, uid string) (user *User, err error) {
 }
 ```
 
-### 6. Serve the REST API
+### 4. Serve the REST API
 
 ```go
 package main
@@ -97,26 +93,7 @@ func main() {
 }
 ```
 
-### 7. Generate API clients
-
-Golang client:
-```
-webrpc-gen -schema=./webrpc.json -target=golang@v0.7.0 -Client -out pkg/example/apiClient.gen.go
-```
-
-TypeScript client:
-```
-webrpc-gen -schema=./webrpc.json -target=typescript@v0.7.0 -Client -out ../frontend/src/exampleApi.gen.ts
-```
-
-### 8. Generate API documentation
-
-OpenAPI 3.x (Swagger) documentation:
-```
-webrpc-gen -schema=./webrpc.json -target=openapi@v0.7.0 -out ./openapi.yaml
-```
-
-### 9. Enjoy!
+### 5. Enjoy!
 
 ..and let us know what you think in [discussions](https://github.com/golang-cz/gospeak/discussions).
 
