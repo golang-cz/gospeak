@@ -79,7 +79,7 @@ func collectCliArgs(args []string) (schema string, targets []*target, err error)
 				os.Exit(0)
 
 			case "v", "version":
-				fmt.Printf("%s %s\n", os.Args[0], VERSION)
+				fmt.Println("gospeak", VERSION)
 				os.Exit(0)
 
 			default:
@@ -126,7 +126,6 @@ func collectTargets(args []string) (targets []*target, err error) {
 
 	for i, target := range targets {
 		if target.out == "" {
-			fmt.Printf("%#v\n\n", target)
 			return nil, fmt.Errorf("target[%v] %v must have -out=<path> flag", i, target.name)
 		}
 	}
