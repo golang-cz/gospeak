@@ -1,6 +1,7 @@
 package gospeak
 
 import (
+	"fmt"
 	"go/types"
 	"os"
 	"path/filepath"
@@ -15,12 +16,12 @@ import (
 func Parse(filePath string, goInterfaceName string) (*schema.WebRPCSchema, error) {
 	path, err := filepath.Abs(filePath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get directory from -schema=%q", path)
+		return nil, errors.Wrapf(err, "failed to get directory from %q", path)
 	}
 
 	file, err := os.Stat(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to open -schema=%q", path)
+		return nil, fmt.Errorf("failed to open %q", path)
 	}
 	if file.Mode().IsRegular() {
 		// Parse all files in the given schema file's directory, so the parser can see all the pkg files.
@@ -40,22 +41,6 @@ func Parse(filePath string, goInterfaceName string) (*schema.WebRPCSchema, error
 		return nil, errors.Errorf("failed to load Go package (len=%v) from %q", len(schemaPkg), path)
 	}
 
-	scope := schemaPkg[0].Types.Scope()
-
-	if goInterfaceName == "" {
-		return nil, errors.Errorf("-interface is required (list of interfaces: %v)", strings.Join(listInterfaces(scope), ", "))
-	}
-
-	obj := scope.Lookup(goInterfaceName)
-	if obj == nil {
-		return nil, errors.Errorf("interface %q not found (list of interfaces: %v)", goInterfaceName, strings.Join(listInterfaces(scope), ", "))
-	}
-
-	iface, ok := obj.Type().Underlying().(*types.Interface)
-	if !ok {
-		return nil, errors.Errorf("%q is %T (list of interfaces: %v)", goInterfaceName, obj.Type().Underlying(), strings.Join(listInterfaces(scope), ", "))
-	}
-
 	p := &parser{
 		schema: &schema.WebRPCSchema{
 			WebrpcVersion: "v1",
@@ -73,8 +58,22 @@ func Parse(filePath string, goInterfaceName string) (*schema.WebRPCSchema, error
 		},
 	}
 
-	if err := p.parseInterfaceMethods(iface, goInterfaceName); err != nil {
-		return nil, errors.Wrapf(err, "failed to parser interface %q", goInterfaceName)
+	scope := schemaPkg[0].Types.Scope()
+
+	for _, goInterfaceName := range listInterfaces(scope) {
+		obj := scope.Lookup(goInterfaceName)
+		if obj == nil {
+			return nil, errors.Errorf("interface %q not found (list of interfaces: %v)", goInterfaceName, strings.Join(listInterfaces(scope), ", "))
+		}
+
+		iface, ok := obj.Type().Underlying().(*types.Interface)
+		if !ok {
+			return nil, errors.Errorf("%q is %T (list of interfaces: %v)", goInterfaceName, obj.Type().Underlying(), strings.Join(listInterfaces(scope), ", "))
+		}
+
+		if err := p.parseInterfaceMethods(iface, goInterfaceName); err != nil {
+			return nil, errors.Wrapf(err, "failed to parser interface %q", goInterfaceName)
+		}
 	}
 
 	return p.schema, nil

@@ -18,7 +18,7 @@ func (p *parser) parseInterfaceMethods(iface *types.Interface, name string) erro
 	for i := 0; i < iface.NumMethods(); i++ {
 		method := iface.Method(i)
 		if !method.Exported() {
-			return nil
+			continue
 		}
 
 		methodName := method.Id()
@@ -64,6 +64,11 @@ func (p *parser) parseInterfaceMethods(iface *types.Interface, name string) erro
 			Outputs: outputs,
 			Service: service, // denormalize/back-reference
 		})
+	}
+
+	if len(service.Methods) == 0 {
+		// Ignore interfaces with no methods defined.
+		return nil
 	}
 
 	p.schema.Services = append(p.schema.Services, service)
