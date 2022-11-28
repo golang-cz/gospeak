@@ -34,7 +34,8 @@ release:
 
     ## Homebrew
     ```
-    brew install golang-cz/tap/gospeak
+    brew tap golang-cz/tap
+    brew install gospeak
     ```
 
     ## Build from source

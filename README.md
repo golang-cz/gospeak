@@ -97,6 +97,21 @@ func main() {
 
 ..and let us know what you think in [discussions](https://github.com/golang-cz/gospeak/discussions).
 
+# Future ideas
+
+## Enums in Go
+```
+import github.com/golang-cz/gospeak
+
+type Status = gospeak.Enum[int64, string]{
+  0: "unknown",
+  1: "draft",
+  2: "scheduled",
+  3: "published",
+  4: "deleted",
+}
+```
+
 # Authors
 - [golang.cz](https://golang.cz)
 - [VojtechVitek](https://github.com/VojtechVitek)
