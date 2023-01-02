@@ -203,9 +203,9 @@ func (p *parser) parseBasic(typ *types.Basic) (*schema.VarType, error) {
 }
 
 func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (varType *schema.VarType, err error) {
-	msg := &schema.Message{
+	msg := &schema.Type{
+		Kind: "struct",
 		Name: schema.VarName(typeName),
-		Type: schema.MessageType("struct"),
 	}
 
 	for i := 0; i < structTyp.NumFields(); i++ {
@@ -222,8 +222,8 @@ func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (varType 
 			}
 
 			if varType.Type == schema.T_Struct {
-				for _, embeddedField := range varType.Struct.Message.Fields {
-					msg.Fields = appendMessageFieldAndDeleteExisting(msg.Fields, embeddedField)
+				for _, embeddedField := range varType.Struct.Type.Fields {
+					msg.Fields = appendTypeFieldAndDeleteExisting(msg.Fields, embeddedField)
 				}
 			}
 			continue
@@ -256,13 +256,13 @@ func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (varType 
 			}
 			optional = strings.Contains(submatches[2], ",omitempty")
 			if strings.Contains(submatches[2], ",string") { // field type should be string in JSON
-				msg.Fields = appendMessageFieldAndDeleteExisting(msg.Fields, &schema.MessageField{
+				msg.Fields = appendTypeFieldAndDeleteExisting(msg.Fields, &schema.TypeField{
 					Name: schema.VarName(fieldNameRIDL),
 					Type: &schema.VarType{
 						Expr: "string",
 						Type: schema.T_String,
 					},
-					Optional: optional,
+					TypeExtra: schema.TypeExtra{Optional: optional},
 				})
 				continue
 			}
@@ -290,31 +290,29 @@ func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (varType 
 		}
 		varType.Expr = fieldTypeRIDL
 
-		structField := &schema.MessageField{
+		structField := &schema.TypeField{
 			Name: schema.VarName(fieldNameRIDL),
 			Type: varType,
-			Meta: []schema.MessageFieldMeta{
-				{
-					"go.field.name": fieldNameGo,
+			TypeExtra: schema.TypeExtra{
+				Meta: []schema.TypeFieldMeta{
+					{"go.field.name": fieldNameGo},
+					{"go.field.type": fieldTypeGo},
 				},
-				{
-					"go.field.type": fieldTypeGo,
-				},
+				Optional: optional,
 			},
-			Optional: optional,
 		}
 
-		msg.Fields = appendMessageFieldAndDeleteExisting(msg.Fields, structField)
+		msg.Fields = appendTypeFieldAndDeleteExisting(msg.Fields, structField)
 	}
 
-	p.schema.Messages = append(p.schema.Messages, msg)
+	p.schema.Types = append(p.schema.Types, msg)
 
 	return &schema.VarType{
 		Expr: typeName,
 		Type: schema.T_Struct,
 		Struct: &schema.VarStructType{
-			Name:    typeName,
-			Message: msg,
+			Name: typeName,
+			Type: msg,
 		},
 	}, nil
 }
@@ -403,7 +401,7 @@ func isJsonMarshaller(typ types.Type, pkg *types.Package) bool {
 
 // Appends message field to the given slice, while also removing any previously defined field of the same name.
 // This lets us overwrite embedded fields, exactly how Go does it behind the scenes in the JSON marshaller.
-func appendMessageFieldAndDeleteExisting(slice []*schema.MessageField, newItem *schema.MessageField) []*schema.MessageField {
+func appendTypeFieldAndDeleteExisting(slice []*schema.TypeField, newItem *schema.TypeField) []*schema.TypeField {
 	// Let's try to find an existing item of the same name and delete it.
 	for i, item := range slice {
 		if item.Name == newItem.Name {

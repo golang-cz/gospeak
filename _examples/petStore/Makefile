@@ -3,13 +3,13 @@ all:
 
 generate:
 	gospeak ./schema/api.go \
-	  golang@v0.8.0 -server -pkg=server -out=./server/server.gen.go \
-	  golang@v0.8.0 -client -pkg=client -out=./client/client.gen.go \
-	  typescript@v0.7.0 -client -out=./client.ts.go \
-	  openapi@v0.7.0 -out=./openapi.yaml
+	  golang@v0.10.0 -server -pkg=server -out=./server/server.gen.go \
+	  golang@v0.10.0 -client -pkg=client -out=./client/client.gen.go \
+	  typescript@v0.10.0 -client -out=./client.gen.ts \
+	  openapi@v0.10.0 -out=./openapi.gen.yaml
 
 run-server:
 	go run ./cmd/server
 
-run-client-tests:
+test:
 	go test ./...

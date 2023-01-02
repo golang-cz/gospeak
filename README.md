@@ -58,16 +58,12 @@ gospeak ./schema/api.go \
 
 #### Generate server code
 
-- HTTP handler with REST API router
-  - `func NewUserStoreServer(serverImplementation UserStore) http.Handler`
-  - HTTP handler for all RPC methods
-  - Automatic JSON request/response body (un)marshaling
-  - Incoming requests call your RPC methods implementation (server logic)
-- Sentinel errors that render HTTP codes
-
-```
-webrpc-gen -schema=./webrpc.json -target=golang@v0.7.0 -Server -out server/server.gen.go
-```
+- REST API router
+  - `func NewPetStoreServer(implementation PetStore) http.Handler`
+  - Handles incoming requests for all RPC methods
+  - Marshals/unmarshals JSON payload automatically
+  - Calls method on your `implementation`
+- Defines REST API sentinel errors with corresponding HTTP status code
 
 ### 3. Mount and serve the API
 
@@ -77,7 +73,7 @@ package main
 func main() {
 	api := &rpc.API{} // implements interface{}
 
-  handler := rpc.NewPetStoreServer(api)
+	handler := rpc.NewPetStoreServer(api)
 	http.ListenAndServe(":8080", handler)
 }
 ```

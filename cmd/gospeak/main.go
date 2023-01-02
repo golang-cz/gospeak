@@ -47,13 +47,13 @@ func main() {
 			TemplateOptions: target.opts,
 		}
 
-		generatedCode, err := gen.Generate(schema, target.name, config)
+		generated, err := gen.Generate(schema, target.name, config)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 
-		if err := os.WriteFile(target.out, []byte(generatedCode), 0644); err != nil {
+		if err := os.WriteFile(target.out, []byte(generated.Code), 0644); err != nil {
 			fmt.Fprintf(os.Stderr, "failed to write to %q file: %v\n", target.out, err)
 			os.Exit(1)
 		}
