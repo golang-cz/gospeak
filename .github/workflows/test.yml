@@ -21,6 +21,6 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - name: Test
-        run: go test -v ./...
+        run: go test -v ./... && go test -v ./_examples/...
       - name: Build
         run: go build ./cmd/gospeak
