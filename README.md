@@ -18,17 +18,27 @@ Introducing **GoSpeak**, a lightweight JSON alternative to gRPC and Twirp, where
 ```go
 package schema
 
+import "context"
+
 type PetStore interface {
-  GetUser() (*User,  error)
-	UpdatePet(ctx context.Context, user *User) (*User,  error)
-	GetPet(ctx context.Context, ID int64) (*User, error)
-	ListUsers(ctx context.Context) ([]*User, error)
-	DeleteUser(ctx context.Context, ID int64) error
+	GetPet(ctx context.Context, ID int64) (pet *Pet, err error)
+	ListPets(ctx context.Context) (pets []*Pet, err error)
+	CreatePet(ctx context.Context, new *Pet) (pet *Pet, err error)
+	UpdatePet(ctx context.Context, ID int64, update *Pet) (pet *Pet, err error)
+	DeletePet(ctx context.Context, ID int64) error
 }
 
-type Book struct {
-    ID int64
-    
+type Pet struct {
+	ID        int64
+	Name      string
+	Available bool
+	PhotoURLs []string
+	Tags      []Tag
+}
+
+type Tag struct {
+	ID   int64
+	Name string
 }
 ```
 
@@ -65,9 +75,9 @@ webrpc-gen -schema=./webrpc.json -target=golang@v0.7.0 -Server -out server/serve
 package main
 
 func main() {
-	rpcServer := &rpc.RPC{} // implements interface{}
+	api := &rpc.API{} // implements interface{}
 
-  handler := rpc.NewUserStoreServer(rpc)
+  handler := rpc.NewPetStoreServer(api)
 	http.ListenAndServe(":8080", handler)
 }
 ```
@@ -90,6 +100,8 @@ func (s *RPC) GetUser(ctx context.Context, uid string) (user *User, err error) {
     return user, nil
 }
 ```
+
+See [source code](./_examples/petStore/server/pets.go)
 
 ### Enjoy!
 
