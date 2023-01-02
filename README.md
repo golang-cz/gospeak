@@ -1,19 +1,38 @@
-# GoSpeak - Go `interface{}` as your API
+# GoSpeak - Go `interface{}` as your API <!-- omit in toc -->
 
-**NOTICE: Not stable. GoSpeak is under active development.**
+GoSpeak is a simple RPC framework, a lightweight alternative to [gRPC](https://grpc.io/) and [Twirp](https://twitchtv.github.io/twirp/docs/intro.html), where Go code is your protobuf.
 
-What if Go `interface{}` was your schema for service-to-service communication? What if you could generate REST API server code, documentation and strongly typed clients in Go/TypesScript/JavaScript in seconds? What if you could use Go channels over network easily?
+```go
+package schema
 
-Introducing **GoSpeak**, a lightweight JSON alternative to gRPC and Twirp, where Go `interface{}` is your protobuf schema. GoSpeak is built on top of [webrpc](https://github.com/webrpc/webrpc) JSON protocol & code-generation suite.
+type ServiceDefinition interface{
+	Ping(context.Context, *Ping) (*Pong, error)
+}
+```
 
-## Example
+GoSpeak generates REST API clients in multiple languages, OpenAPI 3.x (Swagger) documentation and Go server handler code. It's built on top of [webrpc](https://github.com/webrpc/webrpc) JSON schema protocol & code-generation suite, which uses Go templates to generate code.
 
-1. Define your API schema with Go `interface{}`
-2. Generate code (API handlers, Go/TypeScript clients, API docs)
-3. Mount and serve the API
-4. Implement the `interface{}` (server business logic)
+| Server | | Client  |
+|---|---|---|
+| Go | <=> | [Go](https://github.com/webrpc/gen-golang) |
+| Go | <=> | [TypeScript client](https://github.com/webrpc/gen-typescript) |
+| Go | <=> | [JavaScript client](https://github.com/webrpc/gen-javascript) |
+| Go | <=> | [Swagger codegen client(s)](https://github.com/swagger-api/swagger-codegen#overview)|
 
-### 1. Define your API schema with Go `interface{}`
+
+**NOTICE: Under development. We're seeking user feedback.**
+
+# Quick example <!-- omit in toc -->
+
+- [1. Define service API with Go `interface{}`](#1-define-service-api-with-go-interface)
+- [2. Generate code](#2-generate-code)
+  - [Generated server code (HTTP handlers)](#generated-server-code-http-handlers)
+  - [Generated Go client](#generated-go-client)
+  - [Generated OpenAPI 3.x (Swagger) documentation](#generated-openapi-3x-swagger-documentation)
+- [4. Implement the API `interface{}` (server business logic)](#4-implement-the-api-interface-server-business-logic)
+
+
+## 1. Define service API with Go `interface{}`
 
 ```go
 package schema
@@ -42,7 +61,7 @@ type Tag struct {
 }
 ```
 
-### 2. Generate code (server handlers, Go/TS clients, API docs)
+## 2. Generate code
 
 Install [gospeak](./releases) and generate your server code (HTTP handlers), strongly typed clients (Go/TypeScript) and documentation in OpenAPI 3.x (Swagger) API.
 
@@ -56,35 +75,68 @@ gospeak ./schema/api.go \
   openapi -out ./openapi.yaml
 ```
 
-#### Generate server code
-
-- REST API router
-  - `func NewPetStoreServer(implementation PetStore) http.Handler`
-  - Handles incoming requests for all RPC methods
-  - Marshals/unmarshals JSON payload automatically
-  - Calls method on your `implementation`
-- Defines REST API sentinel errors with corresponding HTTP status code
-
-### 3. Mount and serve the API
+### Generated server code (HTTP handlers)
 
 ```go
+/* generated server code */
+package server
+
+// - Handles incoming REST API requests
+// - Unmarshals JSON request into method argument(s)
+// - Calls your RPC method, ie. server.GetPet(ctx, petID) (*Pet, error)
+// - Marshals return argument(s) into JSON response
+func NewPetStoreServer(server PetStore) http.Handler {}
+```
+
+### Generated Go client
+
+```go
+// cmd/listpets/main.go
 package main
 
-func main() {
-	api := &rpc.API{} // implements interface{}
+import "./client"
 
-	handler := rpc.NewPetStoreServer(api)
+var serverUrl = flag.String("serverUrl", "", "server URL")
+
+func main() {
+	api := client.NewPetStoreClient(*serverUrl, &http.Client{}) // generated client
+
+	pets, err := api.ListPets(context.TODO())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(pets)
+}
+```
+
+### Generated OpenAPI 3.x (Swagger) documentation
+
+```
+/* TODO *? 
+
+## 3. Mount and serve the API
+
+```go
+// cmd/petstore/main.go
+package main
+
+import "./server"
+
+func main() {
+	api := &server.API{} // implements API interface{}
+
+	handler := server.NewPetStoreServer(api)
 	http.ListenAndServe(":8080", handler)
 }
 ```
 
-### 4. Implement the `interface{}` (server business logic)
+## 4. Implement the API `interface{}` (server business logic)
 
 ```go
-// rpc/user.go
-package rpc
+// server/user.go
+package server
 
-func (s *RPC) GetUser(ctx context.Context, uid string) (user *User, err error) {
+func (s *API) GetUser(ctx context.Context, uid string) (user *User, err error) {
     user, err := s.DB.GetUser(ctx, uid)
     if err != nil {
         if errors.Is(err, io.EOF) {
@@ -99,14 +151,14 @@ func (s *RPC) GetUser(ctx context.Context, uid string) (user *User, err error) {
 
 See [source code](./_examples/petStore/server/pets.go)
 
-### Enjoy!
+## Enjoy! <!-- omit in toc -->
 
 ..and let us know what you think in [discussions](https://github.com/golang-cz/gospeak/discussions).
 
-# Authors
+# Authors <!-- omit in toc -->
 - [golang.cz](https://golang.cz)
 - [VojtechVitek](https://github.com/VojtechVitek)
 
-# License
+# License <!-- omit in toc -->
 
 [MIT license](./LICENSE)
