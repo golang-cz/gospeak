@@ -23,3 +23,17 @@ type Status = gospeak.Enum[int64, string]{
 
 // type F struct{}
 // type ZZZ []F
+
+
+## YAML configuration file?
+
+```yaml
+userStoreApi:
+  schema: api.yml
+  interfaces: []
+  gen:
+    - golang@v0.8.0 -server -pkg=server -out=./server/server.gen.go
+    - golang@v0.8.0 -client -pkg=client -out=./client/client.gen.go
+    - typescript@v0.7.0 -client -out=./client.ts.go
+    - openapi@v0.7.0 -out=./openapi.yaml
+```
