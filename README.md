@@ -1,5 +1,7 @@
 # GoSpeak - Go `interface{}` as your API
 
+**NOTICE: Not stable. GoSpeak is under active development.**
+
 What if Go `interface{}` was your schema for service-to-service communication? What if you could generate REST API server code, documentation and strongly typed clients in Go/TypesScript/JavaScript in seconds? What if you could use Go channels over network easily?
 
 Introducing **GoSpeak**, a lightweight JSON alternative to gRPC and Twirp, where Go `interface{}` is your protobuf schema. GoSpeak is built on top of [webrpc](https://github.com/webrpc/webrpc) JSON protocol & code-generation suite.
@@ -7,10 +9,9 @@ Introducing **GoSpeak**, a lightweight JSON alternative to gRPC and Twirp, where
 ## Example
 
 1. Define your API schema with Go `interface{}`
-2. Generate code (server handlers, Go/TS clients, API docs)
-3. Implement `interface{}` (server business logic)
-4. Serve the REST API
-5. Enjoy!
+2. Generate code (API handlers, Go/TypeScript clients, API docs)
+3. Mount and serve the API
+4. Implement the `interface{}` (server business logic)
 
 ### 1. Define your API schema with Go `interface{}`
 
@@ -58,7 +59,20 @@ gospeak ./schema/api.go \
 webrpc-gen -schema=./webrpc.json -target=golang@v0.7.0 -Server -out server/server.gen.go
 ```
 
-### 3. Implement `interface{}` (server business logic)
+### 3. Mount and serve the API
+
+```go
+package main
+
+func main() {
+	rpcServer := &rpc.RPC{} // implements interface{}
+
+  handler := rpc.NewUserStoreServer(rpc)
+	http.ListenAndServe(":8080", handler)
+}
+```
+
+### 4. Implement the `interface{}` (server business logic)
 
 ```go
 // rpc/user.go
@@ -77,23 +91,7 @@ func (s *RPC) GetUser(ctx context.Context, uid string) (user *User, err error) {
 }
 ```
 
-### 4. Serve the REST API
-
-```go
-package main
-
-func main() {
-   	rpc := &server.RPC{
-		UserStore: map[int64]*server.User{},
-        // Data models, DB connection etc.
-	}
-
-	apiServer := server.NewUserStoreServer(rpc)
-	http.ListenAndServe(":8080", apiServer)
-}
-```
-
-### 5. Enjoy!
+### Enjoy!
 
 ..and let us know what you think in [discussions](https://github.com/golang-cz/gospeak/discussions).
 
