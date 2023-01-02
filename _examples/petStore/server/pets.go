@@ -1,6 +1,8 @@
 package server
 
-import "context"
+import (
+	"context"
+)
 
 func (s *API) GetPet(ctx context.Context, ID int64) (pet *Pet, err error) {
 	pet, ok := s.PetStore[ID]
@@ -11,9 +13,11 @@ func (s *API) GetPet(ctx context.Context, ID int64) (pet *Pet, err error) {
 }
 
 func (s *API) ListPets(ctx context.Context) (pets []*Pet, err error) {
+	pets = make([]*Pet, 0, len(s.PetStore))
 	for _, pet := range s.PetStore {
 		pets = append(pets, pet)
 	}
+
 	return pets, nil
 }
 

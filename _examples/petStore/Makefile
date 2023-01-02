@@ -9,6 +9,9 @@ generate:
 	  openapi@v0.10.0 -out=./openapi.gen.yaml
 
 run-server:
+	@echo "Running server. You can test it with:"
+	@echo "$$ go test --serverUrl=http://localhost:8080 ./..."
+	@echo
 	go run ./cmd/server
 
 test:
