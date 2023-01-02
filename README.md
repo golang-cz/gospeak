@@ -18,17 +18,17 @@ Introducing **GoSpeak**, a lightweight JSON alternative to gRPC and Twirp, where
 ```go
 package schema
 
-type UserStore interface {
-	UpsertUser(ctx context.Context, user *User) (*User,  error)
-	GetUser(ctx context.Context, ID int64) (*User, error)
+type PetStore interface {
+  GetUser() (*User,  error)
+	UpdatePet(ctx context.Context, user *User) (*User,  error)
+	GetPet(ctx context.Context, ID int64) (*User, error)
 	ListUsers(ctx context.Context) ([]*User, error)
 	DeleteUser(ctx context.Context, ID int64) error
 }
 
-type User struct {
+type Book struct {
     ID int64
-    UID string
-    Name string
+    
 }
 ```
 
@@ -94,21 +94,6 @@ func (s *RPC) GetUser(ctx context.Context, uid string) (user *User, err error) {
 ### Enjoy!
 
 ..and let us know what you think in [discussions](https://github.com/golang-cz/gospeak/discussions).
-
-# Future ideas
-
-## Enums in Go
-```
-import github.com/golang-cz/gospeak
-
-type Status = gospeak.Enum[int64, string]{
-  0: "unknown",
-  1: "draft",
-  2: "scheduled",
-  3: "published",
-  4: "deleted",
-}
-```
 
 # Authors
 - [golang.cz](https://golang.cz)
