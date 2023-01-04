@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/golang-cz/textcase"
 	"github.com/pkg/errors"
@@ -190,6 +191,11 @@ func (p *parser) goTypeName(typ types.Type) string {
 
 func (p *parser) ridlTypeName(typ types.Type) string {
 	goTypeName := p.goTypeName(typ)
+
+	if unicode.IsUpper(rune(goTypeName[0])) {
+		return textcase.PascalCase(strings.ReplaceAll(goTypeName, ".", ""))
+	}
+
 	return textcase.CamelCase(strings.ReplaceAll(goTypeName, ".", ""))
 }
 

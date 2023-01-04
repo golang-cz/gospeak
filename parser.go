@@ -45,7 +45,7 @@ func Parse(filePath string, goInterfaceName string) (*schema.WebRPCSchema, error
 		schema: &schema.WebRPCSchema{
 			WebrpcVersion: "v1",
 			SchemaName:    goInterfaceName,
-			SchemaVersion: "vTODO",
+			SchemaVersion: "",
 		},
 		schemaPkgName:   schemaPkg[0].Name,
 		parsedTypes:     map[types.Type]*schema.VarType{},
