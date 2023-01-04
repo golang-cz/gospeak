@@ -4,9 +4,9 @@ all:
 generate:
 	gospeak ./schema/api.go \
 	  golang@v0.10.0 -server -pkg=server -out=./server/server.gen.go \
-	  golang@v0.10.0 -client -pkg=client -out=./client/client.gen.go \
-	  typescript@v0.10.0 -client -out=./client.gen.ts \
-	  openapi@v0.10.0 -out=./openapi.gen.yaml
+	  golang@v0.10.0 -client -pkg=client -out=./client/petstore.gen.go \
+	  typescript@v0.10.0 -client -out=./petstore.gen.ts \
+	  openapi@v0.10.0 -out=./petstore.gen.yaml
 
 run-server:
 	@echo "Running server. You can test it with:"
