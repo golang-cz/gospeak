@@ -35,9 +35,9 @@ func main() {
 	}
 
 	if len(targets) == 0 {
-		fmt.Fprintf(os.Stderr, "target is required\n\n")
-		usage(os.Stderr)
-		os.Exit(1)
+		jsonSchema, _ := schema.ToJSON(true)
+		fmt.Println(jsonSchema)
+		os.Exit(0)
 	}
 
 	for _, target := range targets {
