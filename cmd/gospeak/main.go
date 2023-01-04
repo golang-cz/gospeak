@@ -17,30 +17,37 @@ func main() {
 	schemaDir, targets, err := collectCliArgs(os.Args[1:])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n\n", err)
-		usage(os.Stderr)
+		fmt.Fprintf(os.Stderr, usage)
 		os.Exit(1)
 	}
 
 	if schemaDir == "" {
-		fmt.Fprintf(os.Stderr, "schema is required\n\n")
-		usage(os.Stderr)
+		fmt.Fprintf(os.Stderr, "<schema> is required: try gospeak --help\n")
 		os.Exit(1)
 	}
 
 	schema, err := gospeak.Parse(schemaDir, "")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to parse Go schema: %v\n\n", err)
-		usage(os.Stderr)
+		fmt.Fprintf(os.Stderr, "failed to parse Go schema: %v\n", err)
 		os.Exit(1)
 	}
 
 	if len(targets) == 0 {
-		jsonSchema, _ := schema.ToJSON(true)
-		fmt.Println(jsonSchema)
-		os.Exit(0)
+		fmt.Fprintf(os.Stderr, "target is required: try gospeak --help\n")
+		os.Exit(1)
 	}
 
 	for _, target := range targets {
+		if target.name == "json" {
+			jsonSchema, _ := schema.ToJSON(true)
+			if err := os.WriteFile(target.out, []byte(jsonSchema), 0644); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to write to %q file: %v\n", target.out, err)
+				os.Exit(1)
+			}
+			fmt.Printf("generated %v ✓\n", target.out)
+			continue
+		}
+
 		config := &gen.Config{
 			RefreshCache:    false,
 			Format:          true,
@@ -75,7 +82,7 @@ func collectCliArgs(args []string) (schema string, targets []*target, err error)
 			// CLI flags
 			switch strings.TrimLeft(arg, "-") {
 			case "h", "help":
-				usage(os.Stdout)
+				fmt.Fprintf(os.Stdout, usage)
 				os.Exit(0)
 
 			case "v", "version":
@@ -133,11 +140,26 @@ func collectTargets(args []string) (targets []*target, err error) {
 	return
 }
 
-func usage(out *os.File) {
-	fmt.Fprintf(out, "Usage: %s <schema.go> <target> [-targetOpts...] -out=<file> ... [<targetN> [-targetOpts] -out=<file>...]", os.Args[0])
-	fmt.Fprintf(out, `
-  -version
-	print gospeak version and exit
-See https://github.com/golang-cz/gospeak for more info.
-`)
-}
+const usage = `
+Usage: gospeak <schema.go> <target> [-targetOpts...] -out=<file> ...
+  -h, --help
+        print this help
+  -v, --version
+        print gospeak version and exit
+
+Targets:
+  json
+  golang       (see https://github.com/webrpc/gen-golang)
+  typescript   (see https://github.com/webrpc/gen-typescript)
+  javascript   (see https://github.com/webrpc/gen-javascript)
+  openapi      (see https://github.com/webrpc/gen-openapi)
+
+Example usage:
+  gospeak path/to/api.go json -out=api.json
+
+  gospeak ./schema/api.go                                  \
+    json -out ./schema.json                                \
+    golang -server -pkg server -out ./server/server.gen.go \
+    golang -client -pkg client -out ./client/client.gen.go \
+    typescript -client -out ../frontend/src/client.gen.ts  \
+`

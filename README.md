@@ -5,7 +5,7 @@ GoSpeak is a simple RPC framework, a lightweight alternative to [gRPC](https://g
 ```go
 package schema
 
-type ServiceDefinition interface{
+type ServiceDefinition interface {
 	Ping(context.Context, *Ping) (*Pong, error)
 }
 ```
@@ -26,9 +26,9 @@ GoSpeak generates REST API clients in multiple languages, OpenAPI 3.x (Swagger) 
 
 - [1. Define service API with Go `interface{}`](#1-define-service-api-with-go-interface)
 - [2. Generate code](#2-generate-code)
-  - [Generated server code (HTTP handlers)](#generated-server-code-http-handlers)
-  - [Generated Go client](#generated-go-client)
-  - [Generated OpenAPI 3.x (Swagger) documentation](#generated-openapi-3x-swagger-documentation)
+	- [Generated server code (HTTP handlers)](#generated-server-code-http-handlers)
+	- [Generated Go client](#generated-go-client)
+	- [Generated OpenAPI 3.x (Swagger) documentation](#generated-openapi-3x-swagger-documentation)
 - [4. Implement the API `interface{}` (server business logic)](#4-implement-the-api-interface-server-business-logic)
 
 
@@ -65,10 +65,15 @@ type Tag struct {
 
 Install [gospeak](./releases) and generate your server code (HTTP handlers), strongly typed clients (Go/TypeScript) and documentation in OpenAPI 3.x (Swagger) API.
 
+Generate webrpc `.json` schema only. Now you can use [webrpc-gen](https://github.com/webrpc/webrpc#getting-started) cli to generate code.
 ```bash
-#!/bin/bash
+gospeak ./schema.api.go json -out ./schema.json
+```
 
+Or.. you can generate multiple targets directly from gospeak target:
+```bash
 gospeak ./schema/api.go \
+  json -out ./schema.json \
   golang -server -pkg server -out ./server/server.gen.go \
   golang -client -pkg client -out ./client/client.gen.go \
   typescript -client -out ../frontend/src/client.gen.ts \
