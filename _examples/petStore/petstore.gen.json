@@ -1,0 +1,188 @@
+{
+ "webrpc": "v1",
+ "name": "",
+ "version": "",
+ "types": [
+  {
+   "kind": "struct",
+   "name": "Tag",
+   "fields": [
+    {
+     "name": "id",
+     "type": "int64",
+     "meta": [
+      {
+       "go.field.name": "ID"
+      },
+      {
+       "go.field.type": "int64"
+      }
+     ]
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "meta": [
+      {
+       "go.field.name": "Name"
+      },
+      {
+       "go.field.type": "string"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "struct",
+   "name": "Pet",
+   "fields": [
+    {
+     "name": "id",
+     "type": "int64",
+     "meta": [
+      {
+       "go.field.name": "ID"
+      },
+      {
+       "go.field.type": "int64"
+      }
+     ]
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "meta": [
+      {
+       "go.field.name": "Name"
+      },
+      {
+       "go.field.type": "string"
+      }
+     ]
+    },
+    {
+     "name": "available",
+     "type": "bool",
+     "meta": [
+      {
+       "go.field.name": "Available"
+      },
+      {
+       "go.field.type": "bool"
+      }
+     ]
+    },
+    {
+     "name": "photoUrlS",
+     "type": "string",
+     "meta": [
+      {
+       "go.field.name": "PhotoURLs"
+      },
+      {
+       "go.field.type": "[]string"
+      }
+     ]
+    },
+    {
+     "name": "tags",
+     "type": "Tag",
+     "meta": [
+      {
+       "go.field.name": "Tags"
+      },
+      {
+       "go.field.type": "Tag"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "services": [
+  {
+   "name": "PetStore",
+   "methods": [
+    {
+     "name": "CreatePet",
+     "inputs": [
+      {
+       "name": "new",
+       "type": "Pet",
+       "optional": false
+      }
+     ],
+     "outputs": [
+      {
+       "name": "pet",
+       "type": "Pet",
+       "optional": false
+      }
+     ]
+    },
+    {
+     "name": "DeletePet",
+     "inputs": [
+      {
+       "name": "ID",
+       "type": "int64",
+       "optional": false
+      }
+     ],
+     "outputs": []
+    },
+    {
+     "name": "GetPet",
+     "inputs": [
+      {
+       "name": "ID",
+       "type": "int64",
+       "optional": false
+      }
+     ],
+     "outputs": [
+      {
+       "name": "pet",
+       "type": "Pet",
+       "optional": false
+      }
+     ]
+    },
+    {
+     "name": "ListPets",
+     "inputs": [],
+     "outputs": [
+      {
+       "name": "pets",
+       "type": "[]Pet",
+       "optional": false
+      }
+     ]
+    },
+    {
+     "name": "UpdatePet",
+     "inputs": [
+      {
+       "name": "ID",
+       "type": "int64",
+       "optional": false
+      },
+      {
+       "name": "update",
+       "type": "Pet",
+       "optional": false
+      }
+     ],
+     "outputs": [
+      {
+       "name": "pet",
+       "type": "Pet",
+       "optional": false
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

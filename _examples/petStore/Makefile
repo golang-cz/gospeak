@@ -3,6 +3,7 @@ all:
 
 generate:
 	gospeak ./schema/api.go \
+	  json -out=./petstore.gen.json \
 	  golang@v0.10.0 -server -pkg=server -out=./server/server.gen.go \
 	  golang@v0.10.0 -client -pkg=client -out=./client/petstore.gen.go \
 	  typescript@v0.10.0 -client -out=./petstore.gen.ts \
