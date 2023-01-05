@@ -15,9 +15,9 @@ GoSpeak generates REST API clients in multiple languages, OpenAPI 3.x (Swagger) 
 | Server | | Client  |
 |---|---|---|
 | Go | <=> | [Go](https://github.com/webrpc/gen-golang) |
-| Go | <=> | [TypeScript client](https://github.com/webrpc/gen-typescript) |
-| Go | <=> | [JavaScript client](https://github.com/webrpc/gen-javascript) |
-| Go | <=> | [Swagger codegen client(s)](https://github.com/swagger-api/swagger-codegen#overview)|
+| Go | <=> | [TypeScript](https://github.com/webrpc/gen-typescript) |
+| Go | <=> | [JavaScript](https://github.com/webrpc/gen-javascript) |
+| Go | <=> | [Swagger codegen generators](https://github.com/webrpc/gen-openapi#generate-clientdocs-via-openapi-generator)|
 
 
 **NOTICE: Under development. We're seeking user feedback.**
@@ -28,8 +28,8 @@ GoSpeak generates REST API clients in multiple languages, OpenAPI 3.x (Swagger) 
 - [2. Generate code](#2-generate-code)
 	- [Generated server code (HTTP handlers)](#generated-server-code-http-handlers)
 	- [Generated Go client](#generated-go-client)
-	- [Generated OpenAPI 3.x (Swagger) documentation](#generated-openapi-3x-swagger-documentation)
-- [4. Implement the API `interface{}` (server business logic)](#4-implement-the-api-interface-server-business-logic)
+- [3. Mount and serve the API](#3-mount-and-serve-the-api)
+- [4. Implement the server methods](#4-implement-the-server-methods)
 
 
 ## 1. Define service API with Go `interface{}`
@@ -96,28 +96,15 @@ func NewPetStoreServer(server PetStore) http.Handler {}
 ### Generated Go client
 
 ```go
-// cmd/listpets/main.go
-package main
+api := client.NewPetStoreClient(*serverUrl, &http.Client{})
 
-import "./client"
-
-var serverUrl = flag.String("serverUrl", "", "server URL")
-
-func main() {
-	api := client.NewPetStoreClient(*serverUrl, &http.Client{}) // generated client
-
-	pets, err := api.ListPets(context.TODO())
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(pets)
+pets, err := api.ListPets(ctx)
+if err != nil {
+	log.Fatal(err)
 }
-```
 
-### Generated OpenAPI 3.x (Swagger) documentation
-
+fmt.Println(pets)
 ```
-/* TODO *? 
 
 ## 3. Mount and serve the API
 
@@ -135,22 +122,33 @@ func main() {
 }
 ```
 
-## 4. Implement the API `interface{}` (server business logic)
+## 4. Implement the server methods
+
+```go
+// server/server.go
+package server
+
+// Implements PetStore interface{}.
+type API struct {
+	/* DB connection, config etc. */
+}
+
+```
 
 ```go
 // server/user.go
 package server
 
 func (s *API) GetUser(ctx context.Context, uid string) (user *User, err error) {
-    user, err := s.DB.GetUser(ctx, uid)
-    if err != nil {
-        if errors.Is(err, io.EOF) {
-            return nil, Errorf(ErrNotFound, "failed to find user(%v)", uid)
-        }
-        return nil, WrapError(ErrInternal, err, "failed to fetch user(%v)", uid)
-    }
+	user, err := s.DB.GetUser(ctx, uid)
+	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return nil, Errorf(ErrNotFound, "failed to find user(%v)", uid)
+		}
+		return nil, WrapError(ErrInternal, err, "failed to fetch user(%v)", uid)
+	}
 
-    return user, nil
+	return user, nil
 }
 ```
 
