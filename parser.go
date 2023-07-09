@@ -72,7 +72,7 @@ func Parse(filePath string, goInterfaceName string) (*schema.WebRPCSchema, error
 		}
 
 		if err := p.parseInterfaceMethods(iface, goInterfaceName); err != nil {
-			return nil, errors.Wrapf(err, "failed to parser interface %q", goInterfaceName)
+			return nil, errors.Wrapf(err, "failed to parse interface %q", goInterfaceName)
 		}
 	}
 
