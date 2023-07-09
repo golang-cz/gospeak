@@ -121,6 +121,62 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 
 			// Otherwise, go for the underlying element type name (ie. `Obj`).
 			return p.parseNamedType(p.goTypeName(underlying), u.Underlying())
+
+		case *types.Array:
+			// Named slice. Webrpc can't handle that.
+			// Example:
+			//  type NamedSlice []int
+			//  type NamedSlice []Obj
+
+			// If the named type is slice and implements encoding.TextMarshaler,
+			// we assume it's []string.
+			if isTextMarshaler(v, pkg) {
+				return &schema.VarType{
+					Expr: "[]string",
+					Type: schema.T_List,
+					List: &schema.VarListType{
+						Elem: &schema.VarType{
+							Expr: "string",
+							Type: schema.T_String,
+						},
+					},
+				}, nil
+			}
+
+			// If the named type is slice and implements json.Marshaler,
+			// we assume it's []any.
+			if isJsonMarshaller(v, pkg) {
+				return &schema.VarType{
+					Expr: "[]any",
+					Type: schema.T_List,
+					List: &schema.VarListType{
+						Elem: &schema.VarType{
+							Expr: "any",
+							Type: schema.T_Any,
+						},
+					},
+				}, nil
+			}
+
+			// If the named type is slice and the underlying element
+			// type is basic type (ie. `int`), we go for it directly.
+			elem := u.Elem().Underlying()
+			if basic, ok := elem.(*types.Basic); ok {
+				basicType, err := p.parseBasic(basic)
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to parse []namedBasicType")
+				}
+				return &schema.VarType{
+					Expr: fmt.Sprintf("[]%v", basicType.String()),
+					Type: schema.T_List,
+					List: &schema.VarListType{
+						Elem: basicType,
+					},
+				}, nil
+			}
+
+			// Otherwise, go for the underlying element type name (ie. `Obj`).
+			return p.parseNamedType(p.goTypeName(underlying), u.Underlying())
 		}
 
 		if isTextMarshaler(v, pkg) {
