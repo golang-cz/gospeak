@@ -26,8 +26,8 @@ github.com/golang/protobuf v1.3.1 h1:YF8+flBXS5eO826T4nzqPrxfhQThhXl0YzfuUPu4SBg
 github.com/golang/protobuf v1.3.1/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/google/go-cmp v0.2.0/go.mod h1:oXzfMopK8JAjlY9xF4vHSVASa0yLyX7SntLO5aqRK0M=
 github.com/google/go-cmp v0.3.0/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
-github.com/google/go-cmp v0.5.2 h1:X2ev0eStA3AbceY54o37/0PQ/UWqKEiiO2dKL5OPaFM=
 github.com/google/go-cmp v0.5.2/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
+github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
 github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/go-github v17.0.0+incompatible h1:N0LgJ1j65A7kfXrZnUDaYCs/Sf4rEjNlfyDHW9dolSY=
 github.com/google/go-github v17.0.0+incompatible/go.mod h1:zLgOLi98H3fifZn+44m+umXrS52loVEgC2AApnigrVQ=
@@ -80,12 +80,8 @@ github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
-github.com/webrpc/webrpc v0.8.0 h1:nNjKMYo7t2JO+8TIW5sIUBmkpckBCvMkC1q6MBdMYxE=
-github.com/webrpc/webrpc v0.8.0/go.mod h1:FRPq49TjQyQINBjhMFGpAgYQ4vjM9g2rHtEPSceHxa4=
-github.com/webrpc/webrpc v0.10.0 h1:U4SpGGmwDPk87zJ46KeY1UtRT/5iVjYrY/0/BhS5rHA=
-github.com/webrpc/webrpc v0.10.0/go.mod h1:AITUwrbZt11JrHI+VNEefQ550UncyIOxZzlWFDEZsTw=
-github.com/webrpc/webrpc v0.11.1 h1:ca27SG0nVGzRmS4Vwzz+J0IuiBIHyTh+jHL+G60tvLY=
-github.com/webrpc/webrpc v0.11.1/go.mod h1:AITUwrbZt11JrHI+VNEefQ550UncyIOxZzlWFDEZsTw=
+github.com/webrpc/webrpc v0.11.2 h1:o+1rN7u5aPIYLoorFeLtS7i61ZMqiVuxtJapKQuUvrY=
+github.com/webrpc/webrpc v0.11.2/go.mod h1:AITUwrbZt11JrHI+VNEefQ550UncyIOxZzlWFDEZsTw=
 github.com/xanzy/ssh-agent v0.2.1/go.mod h1:mLlQY/MoOhWBj+gOGMQkOeiEvkx+8pJSI+0Bx9h2kr4=
 github.com/xanzy/ssh-agent v0.3.2 h1:eKj4SX2Fe7mui28ZgnFW5fmTz1EIr7ugo5s6wDxdHBM=
 github.com/xanzy/ssh-agent v0.3.2/go.mod h1:6dzNDKs0J9rVPHPhaGCukekBHKqfl+L3KghI1Bc68Uw=
