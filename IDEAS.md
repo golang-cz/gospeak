@@ -25,6 +25,23 @@ type Status = gospeak.Enum[int64, string]{
 // type ZZZ []F
 
 
+## Gospeak to read Go interfaces and execute //go:webrpc comments
+```go
+package api
+
+//go:webrpc golang@0.10.0 -client -out=../public/apiClient.gen.go
+type PublicAPI interface {
+  GetUser(userID int64) (*User, error)
+}
+
+//go:webrpc golang@0.10.0 -client -out=../internal/apiClient.gen.go
+//go:webrpc golang@0.10.0 -server -out=../internal/apiClient.gen.go
+type AdminAPI interface{
+  PublicAPI()
+  DeleteUser(userID int64) error
+}
+```
+
 ## YAML configuration file?
 
 ```yaml
