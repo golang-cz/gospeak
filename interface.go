@@ -10,7 +10,7 @@ import (
 
 func (p *parser) parseInterfaceMethods(iface *types.Interface, name string) error {
 	service := &schema.Service{
-		Name:   schema.VarName(name),
+		Name:   name,
 		Schema: p.schema, // denormalize/back-reference
 	}
 
@@ -59,7 +59,7 @@ func (p *parser) parseInterfaceMethods(iface *types.Interface, name string) erro
 		outputs = outputs[:len(outputs)-1] // Cut it off. The gen/golang adds error as a last return value automatically.
 
 		service.Methods = append(service.Methods, &schema.Method{
-			Name:    schema.VarName(methodName),
+			Name:    methodName,
 			Inputs:  inputs,
 			Outputs: outputs,
 			Service: service, // denormalize/back-reference
@@ -97,7 +97,7 @@ func (p *parser) getMethodArguments(params *types.Tuple, isInput bool) ([]*schem
 		}
 
 		arg := &schema.MethodArgument{
-			Name:      schema.VarName(name),
+			Name:      name,
 			Type:      varType,
 			InputArg:  isInput,  // denormalize/back-reference
 			OutputArg: !isInput, // denormalize/back-reference

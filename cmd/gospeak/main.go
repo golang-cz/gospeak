@@ -39,7 +39,7 @@ func main() {
 
 	for _, target := range targets {
 		if target.name == "json" {
-			jsonSchema, _ := schema.ToJSON(true)
+			jsonSchema, _ := schema.ToJSON()
 			if err := os.WriteFile(target.out, []byte(jsonSchema), 0644); err != nil {
 				fmt.Fprintf(os.Stderr, "failed to write to %q file: %v\n", target.out, err)
 				os.Exit(1)

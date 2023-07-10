@@ -267,7 +267,7 @@ func (p *parser) parseBasic(typ *types.Basic) (*schema.VarType, error) {
 func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (varType *schema.VarType, err error) {
 	msg := &schema.Type{
 		Kind: "struct",
-		Name: schema.VarName(typeName),
+		Name: typeName,
 	}
 
 	for i := 0; i < structTyp.NumFields(); i++ {
@@ -319,7 +319,7 @@ func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (varType 
 			optional = strings.Contains(submatches[2], ",omitempty")
 			if strings.Contains(submatches[2], ",string") { // field type should be string in JSON
 				msg.Fields = appendTypeFieldAndDeleteExisting(msg.Fields, &schema.TypeField{
-					Name: schema.VarName(fieldNameRIDL),
+					Name: fieldNameRIDL,
 					Type: &schema.VarType{
 						Expr: "string",
 						Type: schema.T_String,
@@ -353,7 +353,7 @@ func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (varType 
 		varType.Expr = fieldTypeRIDL
 
 		structField := &schema.TypeField{
-			Name: schema.VarName(fieldNameRIDL),
+			Name: fieldNameRIDL,
 			Type: varType,
 			TypeExtra: schema.TypeExtra{
 				Meta: []schema.TypeFieldMeta{
