@@ -294,7 +294,7 @@ func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (varType 
 		optional := false
 
 		fieldName := field.Name()
-		fieldNameRIDL := textcase.CamelCase(fieldName)
+		fieldNameRIDL := fieldName
 		fieldNameGo := strings.Title(fieldName)
 
 		fieldType := field.Type()
