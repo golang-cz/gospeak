@@ -3,7 +3,6 @@ module github.com/golang-cz/gospeak
 go 1.20
 
 require (
-	github.com/davecgh/go-spew v1.1.1
 	github.com/golang-cz/textcase v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/webrpc/webrpc v0.11.2

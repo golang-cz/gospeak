@@ -44,7 +44,7 @@ func main() {
 				fmt.Fprintf(os.Stderr, "failed to write to %q file: %v\n", target.OutFile, err)
 				os.Exit(1)
 			}
-			fmt.Printf("interface %v{} => %v ✓\n", target.InterfaceName, target.OutFile)
+			fmt.Printf("%20v => %v ✓\n", target.InterfaceName, target.OutFile)
 			continue
 		}
 
@@ -64,7 +64,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "failed to write to %q file: %v\n", target.OutFile, err)
 			os.Exit(1)
 		}
-		fmt.Printf("interface %v{} => %v ✓\n", target.InterfaceName, target.OutFile)
+		fmt.Printf("%20v => %v ✓\n", target.InterfaceName, target.OutFile)
 	}
 }
 

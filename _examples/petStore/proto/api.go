@@ -1,7 +1,12 @@
-package schema
+package proto
 
 import "context"
 
+//go:webrpc json -out=./petstore.gen.json
+//go:webrpc golang@v0.10.0 -server -pkg=server -out=./server/server.gen.go
+//go:webrpc golang@v0.10.0 -client -pkg=client -out=./client/petstore.gen.go
+//go:webrpc typescript@v0.10.0 -client -out=./petstore.gen.ts
+//go:webrpc openapi@v0.10.0 -out=./petstore.gen.yaml
 type PetStore interface {
 	GetPet(ctx context.Context, ID int64) (pet *Pet, err error)
 	ListPets(ctx context.Context) (pets []*Pet, err error)
