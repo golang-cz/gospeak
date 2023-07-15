@@ -40,9 +40,11 @@ func Parse(filePath string) ([]*Target, error) {
 
 	cfg := &packages.Config{
 		Dir: path,
-		Mode: packages.NeedName | packages.NeedImports | packages.NeedTypes | packages.NeedFiles | packages.NeedDeps | packages.NeedSyntax | packages.LoadSyntax | packages.NeedTypes | packages.NeedTypesInfo | packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles |
+		Mode: packages.NeedName | packages.NeedModule |
 			packages.NeedImports | packages.NeedDeps |
-			packages.NeedTypes | packages.NeedSyntax | packages.NeedTypesInfo,
+			packages.NeedTypes | packages.NeedTypesInfo |
+			packages.NeedFiles | packages.NeedCompiledGoFiles |
+			packages.NeedSyntax | packages.LoadSyntax,
 	}
 
 	pkgs, err := packages.Load(cfg, path)
