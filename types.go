@@ -270,7 +270,7 @@ func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (varType 
 
 		fieldName := field.Name()
 		jsonFieldName := fieldName
-		goFieldName := fieldName //strings.Title(fieldName)
+		goFieldName := fieldName
 
 		fieldType := field.Type()
 		ridlFieldType := fieldType.String() //p.ridlTypeName(fieldType)
@@ -285,10 +285,10 @@ func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (varType 
 			if len(submatches) != 3 {
 				return nil, errors.Errorf("unexpected number of json struct tag submatches")
 			}
-			if submatches[1] == "-" { // suppressed field in JSON struct tag
+			if submatches[1] == "-" { // struct field ignored by `json:"-"` struct tag
 				continue
 			}
-			if submatches[1] != "" { // field name defined in JSON struct tag
+			if submatches[1] != "" { // struct field name renamed by json struct tag
 				jsonFieldName = submatches[1]
 			}
 			optional = strings.Contains(submatches[2], ",omitempty")
@@ -299,7 +299,13 @@ func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (varType 
 						Expr: "string",
 						Type: schema.T_String,
 					},
-					TypeExtra: schema.TypeExtra{Optional: optional},
+					TypeExtra: schema.TypeExtra{
+						Meta: []schema.TypeFieldMeta{
+							{"go.field.name": goFieldName},
+							{"go.field.type": goFieldType},
+						},
+						Optional: optional,
+					},
 				})
 				continue
 			}
