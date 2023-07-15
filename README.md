@@ -99,7 +99,7 @@ Generate TypeScript client and OpenAPI 3.x (Swagger) docs too:
 
 ## 3. Generate code
 
-Install [gospeak](./releases) and generate the webrpc code.
+Install [gospeak](https://github.com/golang-cz/gospeak/releases) and generate the webrpc code.
 
 ```bash
 $ gospeak ./proto/api.go
