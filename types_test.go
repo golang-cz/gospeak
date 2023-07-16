@@ -4,21 +4,27 @@ import (
 	"fmt"
 	"go/types"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	"github.com/webrpc/webrpc/schema"
 	"golang.org/x/tools/go/packages"
 )
 
-func TestStructFields(t *testing.T) {
+func TestStructFieldJsonTags(t *testing.T) {
+	t.Parallel()
+
 	type webrpcType struct {
 		name        string
 		expr        string
 		t           schema.CoreType
 		goFieldName string
 		goFieldType string
+		optional    bool
 	}
 
 	tt := []struct {
@@ -26,40 +32,48 @@ func TestStructFields(t *testing.T) {
 		out *webrpcType
 	}{
 		{
-			in:  "ID int64",
+			in:  "ID int64", // default name
 			out: &webrpcType{name: "ID", expr: "int64", t: schema.T_Int64, goFieldName: "ID", goFieldType: "int64"},
-		},
-		{
-			in:  "ID int64 `json:\"id\"`",
-			out: &webrpcType{name: "id", expr: "int64", t: schema.T_Int64, goFieldName: "ID", goFieldType: "int64"},
-		},
-		{
-			in:  "ID int64 `json:\"id,string\"`",
-			out: &webrpcType{name: "id", expr: "string", t: schema.T_String, goFieldName: "ID", goFieldType: "int64"},
-		},
-		{
-			in:  "ID int64 `json:\",string\"`",
-			out: &webrpcType{name: "ID", expr: "string", t: schema.T_String, goFieldName: "ID", goFieldType: "int64"},
 		},
 		{
 			in:  "id int64", // unexported field
 			out: nil,
 		},
 		{
-			in:  "ID int64 `json:\"-\"`", // ignored by json:"-" tag
+			in:  "ID int64 `json:\"-\"`", // ignored in JSON
 			out: nil,
 		},
 		{
-			in:  "ID int64 `db:\"id\", json:\"id\"`", // test more tags
-			out: &webrpcType{name: "id", expr: "int64", t: schema.T_Int64, goFieldName: "ID", goFieldType: "int64"},
+			in:  "ID *int64", // optional
+			out: &webrpcType{name: "ID", expr: "*int64", t: schema.T_Int64, goFieldName: "ID", goFieldType: "*int64", optional: true},
 		},
 		{
-			in:  "Id int32",
-			out: &webrpcType{name: "Id", expr: "int32", t: schema.T_Int32, goFieldName: "Id", goFieldType: "int32"},
+			in:  "ID int64 `json:\"renamed_id\"`", // renamed in JSON
+			out: &webrpcType{name: "renamed_id", expr: "int64", t: schema.T_Int64, goFieldName: "ID", goFieldType: "int64"},
 		},
 		{
-			in:  "Name string",
-			out: &webrpcType{name: "Name", expr: "string", t: schema.T_String, goFieldName: "Name", goFieldType: "string"},
+			in:  "ID int64 `json:\",string\"`", // string type in JSON
+			out: &webrpcType{name: "ID", expr: "string", t: schema.T_String, goFieldName: "ID", goFieldType: "int64"},
+		},
+		{
+			in:  "ID int64 `json:\"id,string\"`", // string type in JSON
+			out: &webrpcType{name: "id", expr: "string", t: schema.T_String, goFieldName: "ID", goFieldType: "int64"},
+		},
+		{
+			in:  "ID int64 `json:\",omitempty\"`", // optional in JSON
+			out: &webrpcType{name: "ID", expr: "int64", t: schema.T_Int64, goFieldName: "ID", goFieldType: "int64", optional: true},
+		},
+		{
+			in:  "ID int64 `json:\"id,string,omitempty\"`", // optional string type in JSON
+			out: &webrpcType{name: "id", expr: "string", t: schema.T_String, goFieldName: "ID", goFieldType: "int64", optional: true},
+		},
+		{
+			in:  "ID uuid.UUID", // uuid implements encoding.TextMarshaler(), expect string in JSON
+			out: &webrpcType{name: "id", expr: "uuid.UUID", t: schema.T_String, goFieldName: "ID", goFieldType: "uuid.UUID", optional: true},
+		},
+		{
+			in:  "ID uuid.UUID `json:\",string\"`", // string type in JSON
+			out: &webrpcType{name: "id", expr: "uuid.UUID", t: schema.T_String, goFieldName: "ID", goFieldType: "uuid.UUID", optional: true},
 		},
 	}
 
@@ -74,12 +88,14 @@ func TestStructFields(t *testing.T) {
 						Type: tc.out.t,
 					},
 					TypeExtra: schema.TypeExtra{
+						Optional: tc.out.optional,
 						Meta: []schema.TypeFieldMeta{
 							{"go.field.name": tc.out.goFieldName},
 							{"go.field.type": tc.out.goFieldType},
 						},
 					},
-				}}
+				},
+			}
 		}
 
 		testStruct(t,
@@ -88,75 +104,176 @@ func TestStructFields(t *testing.T) {
 				Kind:   "struct",
 				Name:   "TestStruct",
 				Fields: fields,
-			})
+			},
+		)
 	}
 }
 
-func testStruct(t *testing.T, input string, want *schema.Type) {
-	t.Helper()
+func TestStructSliceField(t *testing.T) {
+	t.Parallel()
 
-	f, _ := os.CreateTemp("", "")
-	defer os.Remove(f.Name()) // clean up
-	if err := f.Close(); err != nil {
-		t.Fatal(err)
+	type webrpcType struct {
+		name        string
+		elemExpr    string          // element
+		elemT       schema.CoreType // element
+		goFieldName string
+		goFieldType string
+		optional    bool
+		imports     []string
 	}
 
-	cfg := &packages.Config{
-		Dir: ".",
-		Mode: packages.NeedName | packages.NeedModule |
-			packages.NeedImports | packages.NeedDeps |
-			packages.NeedTypes | packages.NeedTypesInfo |
-			packages.NeedFiles | packages.NeedCompiledGoFiles |
-			packages.NeedSyntax | packages.LoadSyntax,
-		Overlay: map[string][]byte{
-			"/api.go": []byte(fmt.Sprintf(`
-				package proto
-
-				import "context"
-
-				type TestedStruct struct {
-					%s
-				}
-				
-				//go:webrpc json -out=%v
-				type ExampleAPI interface{
-					TestStruct(ctx context.Context) (tst *TestedStruct, err error)
-				}
-				`, input, f.Name())),
+	tt := []struct {
+		in  string
+		out *webrpcType
+	}{
+		{
+			in:  "ID []int64",
+			out: &webrpcType{name: "ID", elemExpr: "int64", elemT: schema.T_Int64, goFieldName: "ID", goFieldType: "[]int64"},
 		},
 	}
 
-	pkgs, err := packages.Load(cfg, "/api.go")
+	for _, tc := range tt {
+		testStruct(t,
+			tc.in,
+			&schema.Type{
+				Kind: "struct",
+				Name: "TestStruct",
+				Fields: []*schema.TypeField{
+					&schema.TypeField{
+						Name: tc.out.name,
+						Type: &schema.VarType{
+							Expr: "[]" + tc.out.elemExpr,
+							Type: schema.T_List,
+							List: &schema.VarListType{
+								Elem: &schema.VarType{
+									Expr: tc.out.elemExpr,
+									Type: tc.out.elemT,
+								},
+							},
+						},
+						TypeExtra: schema.TypeExtra{
+							Optional: tc.out.optional,
+							Meta: []schema.TypeFieldMeta{
+								{"go.field.name": tc.out.goFieldName},
+								{"go.field.type": tc.out.goFieldType},
+							},
+						},
+					},
+				},
+			},
+		)
+	}
+}
+
+// TODO: Test extra struct tags.
+// {
+// 	in:  "ID int64 `db:\"id\", json:\"id\"`", // test extra tags
+// 	out: &webrpcType{name: "id", expr: "int64", t: schema.T_Int64, goFieldName: "ID", goFieldType: "int64"},
+// },
+
+func testStruct(t *testing.T, inputFields string, want *schema.Type) {
+	t.Helper()
+
+	srcCode := fmt.Sprintf(`	package gospeak
+
+	import (
+		"context"
+		
+		"github.com/golang-cz/gospeak/uuid"
+	)
+
+	type TestStruct struct {
+		%s
+	}
+	
+	//go:webrpc json -out=/dev/null
+	type TestAPI interface{
+		TestStruct(ctx context.Context) (tst *TestStruct, err error)
+	}
+
+
+	// Ensure all the imports are used.
+	var _ uuid.UUID
+	`, inputFields)
+
+	wd, err := os.Getwd()
 	if err != nil {
-		t.Fatal(fmt.Errorf("loading Go packages"))
+		fmt.Println("Error:", err)
+		return
 	}
-	if len(pkgs) != 1 {
-		t.Fatal(fmt.Errorf("expected one Go package, got %v", len(pkgs)))
+
+	package1Path := filepath.Join(wd, "proto.go")
+	package2Path := filepath.Join(wd, "uuid/uuid.go")
+
+	cfg := &packages.Config{
+		Dir:  wd,
+		Mode: packages.NeedName | packages.NeedSyntax | packages.NeedTypes | packages.LoadImports,
+		// Mode: packages.NeedName | packages.NeedModule |
+		// 	packages.NeedImports | packages.NeedDeps |
+		// 	packages.NeedTypes | packages.NeedTypesInfo |
+		// 	packages.NeedFiles | packages.NeedCompiledGoFiles |
+		// 	packages.NeedSyntax | packages.LoadSyntax | packages.LoadImports,
+		Overlay: map[string][]byte{
+			package1Path: []byte(srcCode),
+			package2Path: []byte(`
+				package uuid
+
+				type UUID [16]byte
+
+				// MarshalText implements encoding.TextMarshaler.
+				func (uuid UUID) MarshalText() ([]byte, error) {
+					return []byte{}, nil
+				}
+
+				// UnmarshalText implements encoding.TextUnmarshaler.
+				func (uuid *UUID) UnmarshalText(data []byte) error {
+					return nil
+				}
+			`),
+		},
 	}
+
+	pkgs, err := packages.Load(cfg, "file="+package1Path, "file="+package2Path)
+	if err != nil {
+		t.Fatal(inputFields, fmt.Errorf("loading Go packages: %w", err))
+	}
+
+	t.Log(spew.Sdump(pkgs))
+
+	for _, pkg := range pkgs {
+		if len(pkg.Errors) > 0 {
+			t.Log(spew.Sdump(pkg.Errors))
+		}
+	}
+
+	if len(pkgs) != 2 {
+		t.Fatal(inputFields, fmt.Errorf("expected 2 Go packages, got %v\n%s", len(pkgs), spew.Sdump(pkgs)))
+	}
+
 	pkg := pkgs[0]
 
 	if len(pkg.Errors) > 0 {
-		t.Fatal(fmt.Sprintf("%+v", pkg.Errors))
+		t.Fatal(inputFields, fmt.Sprintf("%+v\n%s", pkg.Errors, prefixLinesWithLineNumber(srcCode)))
 	}
 
 	_, _ = collectInterfaces(pkg)
 
 	scope := pkg.Types.Scope()
 
-	obj := scope.Lookup("TestedStruct")
+	obj := scope.Lookup("TestStruct")
 	if obj == nil {
-		t.Fatal(errors.Errorf("type TestedStruct not defined"))
+		t.Fatal(inputFields, errors.Errorf("type TestStruct not defined"))
 	}
 
-	testedStruct, ok := obj.Type().Underlying().(*types.Struct)
+	testStruct, ok := obj.Type().Underlying().(*types.Struct)
 	if !ok {
-		t.Fatal(errors.Errorf("type TestedStruct is %T", obj.Type().Underlying()))
+		t.Fatal(inputFields, errors.Errorf("type TestStruct is %T", obj.Type().Underlying()))
 	}
 
 	p := &parser{
 		schema: &schema.WebRPCSchema{
 			WebrpcVersion: "v1",
-			SchemaName:    "ExampleAPI",
+			SchemaName:    "TestAPI",
 			SchemaVersion: "",
 		},
 		schemaPkgName:   pkg.Name,
@@ -170,19 +287,19 @@ func testStruct(t *testing.T, input string, want *schema.Type) {
 		},
 	}
 
-	_, err = p.parseStruct("TestStruct", testedStruct)
+	_, err = p.parseStruct("TestStruct", testStruct)
 	if err != nil {
-		t.Fatal(errors.Wrapf(err, "failed to parse struct TestStruct"))
+		t.Fatal(inputFields, errors.Wrapf(err, "failed to parse struct TestStruct"))
 	}
 
 	if len(p.schema.Types) != 1 {
-		t.Fatalf("expected one struct type, got %+v", p.schema.Types)
+		t.Fatalf(inputFields, "expected one struct type, got %+v", p.schema.Types)
 	}
 
 	got := p.schema.Types[0]
 
 	if !cmp.Equal(want, got) {
-		t.Errorf("%s\n%s\n", input, cmp.Diff(want, got))
+		t.Errorf("%s\n%s\n", inputFields, coloredDiff(want, got))
 	}
 
 	return
@@ -199,3 +316,31 @@ func testStruct(t *testing.T, input string, want *schema.Type) {
 // 	},
 // }})
 // defer exported.Cleanup()
+
+func coloredDiff(x, y interface{}, opts ...cmp.Option) string {
+	escapeCode := func(code int) string {
+		return fmt.Sprintf("\x1b[%dm", code)
+	}
+	diff := cmp.Diff(x, y, opts...)
+	if diff == "" {
+		return ""
+	}
+	ss := strings.Split(diff, "\n")
+	for i, s := range ss {
+		switch {
+		case strings.HasPrefix(s, "-"):
+			ss[i] = escapeCode(31) + s + escapeCode(0)
+		case strings.HasPrefix(s, "+"):
+			ss[i] = escapeCode(32) + s + escapeCode(0)
+		}
+	}
+	return strings.Join(ss, "\n")
+}
+
+func prefixLinesWithLineNumber(input string) string {
+	lines := strings.Split(input, "\n")
+	for i := range lines {
+		lines[i] = fmt.Sprintf("%d: %s", i+1, lines[i])
+	}
+	return strings.Join(lines, "\n")
+}
