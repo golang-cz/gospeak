@@ -403,8 +403,7 @@ func (p *parser) parseMap(typeName string, m *types.Map) (*schema.VarType, error
 var textMarshalerRegex = regexp.MustCompile(`^func \((.+)\)\.MarshalText\(\) \((.+ )?\[\]byte, ([a-z]+ )?error\)$`)
 var textUnmarshalerRegex = regexp.MustCompile(`^func \((.+)\)\.UnmarshalText\((.+ )?\[\]byte\) \(?(.+ )?error\)?$`)
 
-// Returns true if the given type implements encoding.TextMarshaler
-// and encoding.TextUnmarshaler interfaces.
+// Returns true if the given type implements encoding.TextMarshaler/TextUnmarshaler interfaces.
 func isTextMarshaler(typ types.Type, pkg *types.Package) bool {
 	marshalTextMethod, _, _ := types.LookupFieldOrMethod(typ, true, pkg, "MarshalText")
 	if marshalTextMethod == nil || !textMarshalerRegex.MatchString(marshalTextMethod.String()) {
@@ -419,18 +418,22 @@ func isTextMarshaler(typ types.Type, pkg *types.Package) bool {
 	return true
 }
 
-// Returns true if the given type implements json.Marshaler and
-// json.Unmarshaler interfaces.
+var jsonMarshalerRegex = regexp.MustCompile(`^func \((.+)\)\.MarshalJSON\(\) \((.+ )?\[\]byte, ([a-z]+ )?error\)$`)
+var jsonUnmarshalerRegex = regexp.MustCompile(`^func \((.+)\)\.UnmarshalJSON\((.+ )?\[\]byte\) \(?(.+ )?error\)?$`)
+
+// Returns true if the given type implements json.Marshaler/Unmarshaler interfaces.
 func isJsonMarshaller(typ types.Type, pkg *types.Package) bool {
-	marshalJSONMethod, _, _ := types.LookupFieldOrMethod(typ, true, pkg, "MarshalJSON")
-	unmarshalJSONMethod, _, _ := types.LookupFieldOrMethod(typ, true, pkg, "UnmarshalJSON")
-	if marshalJSONMethod != nil &&
-		unmarshalJSONMethod != nil &&
-		strings.HasSuffix(marshalJSONMethod.String(), ".MarshalJSON() ([]byte, error)") &&
-		strings.HasSuffix(unmarshalJSONMethod.String(), ".UnmarshalJSON(text []byte) error") {
-		return true
+	marshalJsonMethod, _, _ := types.LookupFieldOrMethod(typ, true, pkg, "MarshalJSON")
+	if marshalJsonMethod == nil || !jsonMarshalerRegex.MatchString(marshalJsonMethod.String()) {
+		return false
 	}
-	return false
+
+	unmarshalJsonMethod, _, _ := types.LookupFieldOrMethod(typ, true, pkg, "UnmarshalJSON")
+	if unmarshalJsonMethod == nil || !jsonUnmarshalerRegex.MatchString(unmarshalJsonMethod.String()) {
+		return false
+	}
+
+	return true
 }
 
 // Appends message field to the given slice, while also removing any previously defined field of the same name.

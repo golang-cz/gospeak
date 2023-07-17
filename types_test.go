@@ -326,6 +326,30 @@ func TestTextUnmarshalerRegex(t *testing.T) {
 	}
 }
 
+func TestJsonMarshalerRegex(t *testing.T) {
+	tt := []string{
+		"func (github.com/golang-cz/gospeak/data.Person).MarshalJSON() ([]byte, error)",
+		"func (github.com/golang-cz/gospeak/data.Person).MarshalJSON() (data []byte, err error)",
+	}
+	for _, tc := range tt {
+		if !jsonMarshalerRegex.MatchString(tc) {
+			t.Errorf("jsonMarshalerRegex didn't match %q", tc)
+		}
+	}
+}
+
+func TestJsonUnmarshalerRegex(t *testing.T) {
+	tt := []string{
+		"func (*github.com/golang-cz/gospeak/data.Person).UnmarshalJSON(data []byte) error",
+		"func (*github.com/golang-cz/gospeak/data.Person).UnmarshalJSON(b []byte) (err error)",
+	}
+	for _, tc := range tt {
+		if !jsonUnmarshalerRegex.MatchString(tc) {
+			t.Errorf("jsonUnmarshalerRegex didn't match %q", tc)
+		}
+	}
+}
+
 // exported := packagestest.Export(t, exporter, []packagestest.Module{{
 // 	Name: "fake",
 // 	Files: map[string]interface{}{
