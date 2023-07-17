@@ -76,7 +76,7 @@ func Parse(filePath string) ([]*Target, error) {
 				SchemaName:    target.InterfaceName,
 				SchemaVersion: "",
 			},
-			schemaPkgName:   pkg.Name,
+			schemaPkgName:   pkg.Types.Path(),
 			parsedTypes:     map[types.Type]*schema.VarType{},
 			parsedTypeNames: map[string]struct{}{},
 
