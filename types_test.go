@@ -68,12 +68,12 @@ func TestStructFieldJsonTags(t *testing.T) {
 			out: &webrpcType{name: "id", expr: "string", t: schema.T_String, goFieldName: "ID", goFieldType: "int64", optional: true},
 		},
 		{
-			in:  "ID uuid.UUID", // uuid implements encoding.TextMarshaler(), expect string in JSON
-			out: &webrpcType{name: "id", expr: "uuid.UUID", t: schema.T_String, goFieldName: "ID", goFieldType: "uuid.UUID", optional: true},
+			in:  "ID uuid.UUID", // uuid implements encoding.TextMarshaler interface, expect string in JSON
+			out: &webrpcType{name: "ID", expr: "uuid.UUID", t: schema.T_String, goFieldName: "ID", goFieldType: "uuid.UUID"},
 		},
 		{
 			in:  "ID uuid.UUID `json:\",string\"`", // string type in JSON
-			out: &webrpcType{name: "id", expr: "uuid.UUID", t: schema.T_String, goFieldName: "ID", goFieldType: "uuid.UUID", optional: true},
+			out: &webrpcType{name: "ID", expr: "string", t: schema.T_String, goFieldName: "ID", goFieldType: "uuid.UUID"},
 		},
 	}
 
@@ -208,11 +208,6 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 	cfg := &packages.Config{
 		Dir:  wd,
 		Mode: packages.NeedName | packages.NeedSyntax | packages.NeedTypes | packages.LoadImports,
-		// Mode: packages.NeedName | packages.NeedModule |
-		// 	packages.NeedImports | packages.NeedDeps |
-		// 	packages.NeedTypes | packages.NeedTypesInfo |
-		// 	packages.NeedFiles | packages.NeedCompiledGoFiles |
-		// 	packages.NeedSyntax | packages.LoadSyntax | packages.LoadImports,
 		Overlay: map[string][]byte{
 			package1Path: []byte(srcCode),
 			package2Path: []byte(`
@@ -237,8 +232,6 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 	if err != nil {
 		t.Fatal(inputFields, fmt.Errorf("loading Go packages: %w", err))
 	}
-
-	t.Log(spew.Sdump(pkgs))
 
 	for _, pkg := range pkgs {
 		if len(pkg.Errors) > 0 {
@@ -303,6 +296,34 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 	}
 
 	return
+}
+
+func TestTextMarshalerRegex(t *testing.T) {
+	tt := []string{
+		"func (github.com/google/uuid.UUID).MarshalText() ([]byte, error)",
+		"func (github.com/google/uuid.UUID).MarshalText() (data []byte, err error)",
+		"func (github.com/golang-cz/gospeak/uuid.UUID).MarshalText() ([]byte, error)",
+		"func (github.com/golang-cz/gospeak/uuid.UUID).MarshalText() (b []byte, err error)",
+	}
+	for _, tc := range tt {
+		if !textMarshalerRegex.MatchString(tc) {
+			t.Errorf("textMarshalerRegex didn't match %q", tc)
+		}
+	}
+}
+
+func TestTextUnmarshalerRegex(t *testing.T) {
+	tt := []string{
+		"func (github.com/google/uuid.UUID).UnmarshalText(data []byte) (err error)",
+		"func (github.com/google/uuid.UUID).UnmarshalText(data []byte) error",
+		"func (*github.com/golang-cz/gospeak/uuid.UUID).UnmarshalText(b []byte) (err error)",
+		"func (*github.com/golang-cz/gospeak/uuid.UUID).UnmarshalText(b []byte) error",
+	}
+	for _, tc := range tt {
+		if !textUnmarshalerRegex.MatchString(tc) {
+			t.Errorf("textUnmarshalerRegex didn't match %q", tc)
+		}
+	}
 }
 
 // exported := packagestest.Export(t, exporter, []packagestest.Module{{

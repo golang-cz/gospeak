@@ -414,18 +414,23 @@ func (p *parser) parseMap(typeName string, m *types.Map) (*schema.VarType, error
 	return varType, nil
 }
 
+var textMarshalerRegex = regexp.MustCompile(`^func \((.+)\)\.MarshalText\(\) \((.+ )?\[\]byte, ([a-z]+ )?error\)$`)
+var textUnmarshalerRegex = regexp.MustCompile(`^func \((.+)\)\.UnmarshalText\((.+ )?\[\]byte\) \(?(.+ )?error\)?$`)
+
 // Returns true if the given type implements encoding.TextMarshaler
 // and encoding.TextUnmarshaler interfaces.
 func isTextMarshaler(typ types.Type, pkg *types.Package) bool {
 	marshalTextMethod, _, _ := types.LookupFieldOrMethod(typ, true, pkg, "MarshalText")
-	unmarshalTextMethod, _, _ := types.LookupFieldOrMethod(typ, true, pkg, "UnmarshalText")
-	if marshalTextMethod != nil &&
-		unmarshalTextMethod != nil &&
-		strings.HasSuffix(marshalTextMethod.String(), ".MarshalText() ([]byte, error)") &&
-		strings.HasSuffix(unmarshalTextMethod.String(), ".UnmarshalText(text []byte) error") {
-		return true
+	if marshalTextMethod == nil || !textMarshalerRegex.MatchString(marshalTextMethod.String()) {
+		return false
 	}
-	return false
+
+	unmarshalTextMethod, _, _ := types.LookupFieldOrMethod(typ, true, pkg, "UnmarshalText")
+	if unmarshalTextMethod == nil || !textUnmarshalerRegex.MatchString(unmarshalTextMethod.String()) {
+		return false
+	}
+
+	return true
 }
 
 // Returns true if the given type implements json.Marshaler and
