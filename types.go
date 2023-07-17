@@ -13,13 +13,6 @@ import (
 	"github.com/webrpc/webrpc/schema"
 )
 
-// Given `db:"id,omitempty,pk" json:"id,string"` struct tag,
-// this regex will return the following three submatches:
-// [0]: json:"id,string"
-// [1]: id
-// [2]: ,string
-var jsonTagRegex, _ = regexp.Compile(`\s?json:\"([^,\"]*)(,[^\"]*)?\"`)
-
 func (p *parser) parseType(typ types.Type) (*schema.VarType, error) {
 	return p.parseNamedType("", typ)
 }
@@ -225,113 +218,40 @@ func (p *parser) parseBasic(typ *types.Basic) (*schema.VarType, error) {
 	return &varType, nil
 }
 
-func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (varType *schema.VarType, err error) {
+func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (*schema.VarType, error) {
 	msg := &schema.Type{
 		Kind: "struct",
 		Name: typeName,
 	}
 
 	for i := 0; i < structTyp.NumFields(); i++ {
-		field := structTyp.Field(i)
-		if !field.Exported() {
+		structField := structTyp.Field(i)
+		if !structField.Exported() {
 			continue
 		}
+		structTags := structTyp.Tag(i)
 
-		tag := structTyp.Tag(i)
-		if field.Embedded() || strings.Contains(tag, `json:",inline"`) {
-			varType, err := p.parseNamedType("", field.Type())
+		if structField.Embedded() || strings.Contains(structTags, `json:",inline"`) {
+			varType, err := p.parseNamedType("", structField.Type())
 			if err != nil {
-				return nil, errors.Wrapf(err, "failed to parse var %v", field.Name())
+				return nil, fmt.Errorf("parsing var %v: %w", structField.Name(), err)
 			}
 
 			if varType.Type == schema.T_Struct {
 				for _, embeddedField := range varType.Struct.Type.Fields {
-					msg.Fields = appendTypeFieldAndDeleteExisting(msg.Fields, embeddedField)
+					msg.Fields = appendOrOverrideExistingField(msg.Fields, embeddedField)
 				}
 			}
 			continue
 		}
 
-		optional := false
-
-		fieldName := field.Name()
-		jsonFieldName := fieldName
-		goFieldName := fieldName
-
-		fieldType := field.Type()
-		ridlFieldType := fieldType.String() //p.ridlTypeName(fieldType)
-		goFieldType := p.goTypeName(fieldType)
-
-		if strings.Contains(tag, `json:"`) {
-			submatches := jsonTagRegex.FindStringSubmatch(tag)
-			// Submatches from the jsonTagRegex:
-			// [0]: json:"deleted_by,omitempty,string"
-			// [1]: deleted_by
-			// [2]: ,omitempty,string
-			if len(submatches) != 3 {
-				return nil, errors.Errorf("unexpected number of json struct tag submatches")
-			}
-			if submatches[1] == "-" { // struct field ignored by `json:"-"` struct tag
-				continue
-			}
-			if submatches[1] != "" { // struct field name renamed by json struct tag
-				jsonFieldName = submatches[1]
-			}
-			optional = strings.Contains(submatches[2], ",omitempty")
-			if strings.Contains(submatches[2], ",string") { // field type should be string in JSON
-				msg.Fields = appendTypeFieldAndDeleteExisting(msg.Fields, &schema.TypeField{
-					Name: jsonFieldName,
-					Type: &schema.VarType{
-						Expr: "string",
-						Type: schema.T_String,
-					},
-					TypeExtra: schema.TypeExtra{
-						Meta: []schema.TypeFieldMeta{
-							{"go.field.name": goFieldName},
-							{"go.field.type": goFieldType},
-						},
-						Optional: optional,
-					},
-				})
-				continue
-			}
-		}
-
-		if _, ok := field.Type().Underlying().(*types.Pointer); ok {
-			optional = true
-		}
-
-		structTypeName := ""
-		if _, ok := field.Type().Underlying().(*types.Struct); ok {
-			// Anonymous struct fields.
-			// Example:
-			//   type Something struct {
-			// 	   AnonymousField struct { // no explicit struct type name
-			//       Name string
-			//     }
-			//   }
-			structTypeName = typeName + field.Name()
-		}
-
-		varType, err := p.parseNamedType(structTypeName, fieldType)
+		field, err := p.parseStructField(typeName, structField, structTags)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse var %v", field.Name())
+			return nil, fmt.Errorf("parsing struct field %v: %w", i, err)
 		}
-		varType.Expr = ridlFieldType
-
-		structField := &schema.TypeField{
-			Name: jsonFieldName,
-			Type: varType,
-			TypeExtra: schema.TypeExtra{
-				Meta: []schema.TypeFieldMeta{
-					{"go.field.name": goFieldName},
-					{"go.field.type": goFieldType},
-				},
-				Optional: optional,
-			},
+		if field != nil {
+			msg.Fields = appendOrOverrideExistingField(msg.Fields, field)
 		}
-
-		msg.Fields = appendTypeFieldAndDeleteExisting(msg.Fields, structField)
 	}
 
 	p.schema.Types = append(p.schema.Types, msg)
@@ -344,6 +264,99 @@ func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (varType 
 			Type: msg,
 		},
 	}, nil
+}
+
+// This regex will return the following three submatches,
+// given `db:"id,omitempty,pk" json:"id,string"` struct tag:
+//
+//	[0]: json:"id,string"
+//	[1]: id
+//	[2]: ,string
+var jsonTagRegex, _ = regexp.Compile(`\s?json:\"([^,\"]*)(,[^\"]*)?\"`)
+
+// parses single Go struct field
+// if the field is embedded, ie. `json:",inline"`, recursively parse
+func (p *parser) parseStructField(typeName string, field *types.Var, structTags string) (*schema.TypeField, error) {
+	optional := false
+
+	fieldName := field.Name()
+	jsonFieldName := fieldName
+	goFieldName := fieldName
+
+	fieldType := field.Type()
+	ridlFieldType := fieldType.String() //p.ridlTypeName(fieldType)
+	goFieldType := p.goTypeName(fieldType)
+
+	if strings.Contains(structTags, `json:"`) {
+		submatches := jsonTagRegex.FindStringSubmatch(structTags)
+		// Submatches from the jsonTagRegex:
+		// [0]: json:"deleted_by,omitempty,string"
+		// [1]: deleted_by
+		// [2]: ,omitempty,string
+		if len(submatches) != 3 {
+			return nil, errors.Errorf("unexpected number of json struct tag submatches")
+		}
+		if submatches[1] == "-" { // struct field ignored by `json:"-"` struct tag
+			return nil, nil
+		}
+		if submatches[1] != "" { // struct field name renamed by json struct tag
+			jsonFieldName = submatches[1]
+		}
+		optional = strings.Contains(submatches[2], ",omitempty")
+		if strings.Contains(submatches[2], ",string") { // field type should be string in JSON
+			return &schema.TypeField{
+				Name: jsonFieldName,
+				Type: &schema.VarType{
+					Expr: "string",
+					Type: schema.T_String,
+				},
+				TypeExtra: schema.TypeExtra{
+					Meta: []schema.TypeFieldMeta{
+						{"go.field.name": goFieldName},
+						{"go.field.type": goFieldType},
+					},
+					Optional: optional,
+				},
+			}, nil
+		}
+	}
+
+	if _, ok := field.Type().Underlying().(*types.Pointer); ok {
+		optional = true
+	}
+
+	structTypeName := ""
+	if _, ok := field.Type().Underlying().(*types.Struct); ok {
+		// Anonymous struct fields.
+		// Example:
+		//   type Something struct {
+		// 	   AnonymousField struct { // no explicit struct type name
+		//       Name string
+		//     }
+		//   }
+		// JSON: {"AnonymousField":{"Name":""}}
+		structTypeName = typeName + "Anonymous" + field.Name()
+	}
+
+	varType, err := p.parseNamedType(structTypeName, fieldType)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to parse var %v", field.Name())
+	}
+	varType.Expr = ridlFieldType
+
+	structField := &schema.TypeField{
+		Name: jsonFieldName,
+		Type: varType,
+		TypeExtra: schema.TypeExtra{
+			Meta: []schema.TypeFieldMeta{
+				{"go.field.name": goFieldName},
+				{"go.field.type": goFieldType},
+			},
+			Optional: optional,
+		},
+	}
+
+	return structField, nil
 }
 
 func (p *parser) parseSlice(typeName string, sliceTyp *types.Slice) (*schema.VarType, error) {
@@ -438,7 +451,7 @@ func isJsonMarshaller(typ types.Type, pkg *types.Package) bool {
 
 // Appends message field to the given slice, while also removing any previously defined field of the same name.
 // This lets us overwrite embedded fields, exactly how Go does it behind the scenes in the JSON marshaller.
-func appendTypeFieldAndDeleteExisting(slice []*schema.TypeField, newItem *schema.TypeField) []*schema.TypeField {
+func appendOrOverrideExistingField(slice []*schema.TypeField, newItem *schema.TypeField) []*schema.TypeField {
 	// Let's try to find an existing item of the same name and delete it.
 	for i, item := range slice {
 		if item.Name == newItem.Name {

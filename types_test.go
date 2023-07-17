@@ -286,7 +286,7 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 	}
 
 	if len(p.schema.Types) != 1 {
-		t.Fatalf(inputFields, "expected one struct type, got %+v", p.schema.Types)
+		t.Fatalf("%s\nexpected one struct type, got %+v", inputFields, p.schema.Types)
 	}
 
 	got := p.schema.Types[0]
