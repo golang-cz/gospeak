@@ -55,6 +55,14 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 		underlying := v.Underlying()
 		typeName := p.goTypeName(typ)
 
+		// If the type implements encoding.TextMarshaler, it's a string.
+		if isTextMarshaler(v, pkg) {
+			return &schema.VarType{
+				Expr: "string",
+				Type: schema.T_String,
+			}, nil
+		}
+
 		switch u := underlying.(type) {
 
 		case *types.Pointer:
@@ -70,21 +78,6 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 			// Example:
 			//  type NamedSlice []int
 			//  type NamedSlice []Obj
-
-			// If the named type is a slice/array and implements encoding.TextMarshaler,
-			// we assume it's []string.
-			if isTextMarshaler(v, pkg) {
-				return &schema.VarType{
-					Expr: "[]string",
-					Type: schema.T_List,
-					List: &schema.VarListType{
-						Elem: &schema.VarType{
-							Expr: "string",
-							Type: schema.T_String,
-						},
-					},
-				}, nil
-			}
 
 			// If the named type is a slice/array and implements json.Marshaler,
 			// we assume it's []any.
@@ -132,13 +125,6 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 			return p.parseNamedType(p.goTypeName(underlying), u.Underlying())
 
 		default:
-			if isTextMarshaler(v, pkg) {
-				return &schema.VarType{
-					Expr: "string",
-					Type: schema.T_String,
-				}, nil
-			}
-
 			if isJsonMarshaller(v, pkg) {
 				return &schema.VarType{
 					Expr: "any",
