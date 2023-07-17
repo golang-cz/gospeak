@@ -50,7 +50,7 @@ func main() {
 
 		config := &gen.Config{
 			RefreshCache:    false,
-			Format:          true,
+			Format:          false,
 			TemplateOptions: target.Opts,
 		}
 
