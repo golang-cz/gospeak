@@ -134,10 +134,6 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 				}, nil
 			}
 
-			if pkg == nil {
-				return p.parseNamedType(typeName, underlying)
-			}
-
 			return p.parseNamedType(typeName, underlying)
 		}
 
@@ -374,13 +370,8 @@ func (p *parser) parseSlice(typeName string, sliceTyp *types.Slice) (*schema.Var
 		return nil, errors.Wrap(err, "failed to parse slice type")
 	}
 
-	actualTypeName := typeName
-	if actualTypeName == "" {
-		actualTypeName = elem.String()
-	}
-
 	varType := &schema.VarType{
-		Expr: fmt.Sprintf("[]%v", actualTypeName),
+		Expr: fmt.Sprintf("[]%v", elem.String()),
 		Type: schema.T_List,
 		List: &schema.VarListType{
 			Elem: elem,
