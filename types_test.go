@@ -46,7 +46,7 @@ func TestStructFieldJsonTags(t *testing.T) {
 		},
 		{
 			in:  "ID *int64", // optional
-			out: &field{name: "ID", expr: "*int64", t: schema.T_Int64, goName: "ID", goType: "*int64", optional: true},
+			out: &field{name: "ID", expr: "int64", t: schema.T_Int64, goName: "ID", goType: "*int64", optional: true},
 		},
 		{
 			in:  "ID int64 `json:\"renamed_id\"`", // renamed in JSON
@@ -70,15 +70,15 @@ func TestStructFieldJsonTags(t *testing.T) {
 		},
 		{
 			in:  "CreatedAt time.Time",
-			out: &field{name: "CreatedAt", expr: "time.Time", t: schema.T_Timestamp, goName: "CreatedAt", goType: "time.Time", goImport: "time"},
+			out: &field{name: "CreatedAt", expr: "timestamp", t: schema.T_Timestamp, goName: "CreatedAt", goType: "time.Time"},
 		},
 		{
 			in:  "DeletedAt *time.Time",
-			out: &field{name: "DeletedAt", expr: "*time.Time", t: schema.T_Timestamp, goName: "DeletedAt", goType: "*time.Time", goImport: "time", optional: true},
+			out: &field{name: "DeletedAt", expr: "timestamp", t: schema.T_Timestamp, goName: "DeletedAt", goType: "*time.Time", optional: true},
 		},
 		{
 			in:  "ID uuid.UUID", // uuid implements encoding.TextMarshaler interface, expect string in JSON
-			out: &field{name: "ID", expr: "uuid.UUID", t: schema.T_String, goName: "ID", goType: "uuid.UUID", goImport: "github.com/golang-cz/gospeak/uuid"},
+			out: &field{name: "ID", expr: "string", t: schema.T_String, goName: "ID", goType: "uuid.UUID", goImport: "github.com/golang-cz/gospeak/uuid"},
 		},
 		{
 			in:  "ID uuid.UUID `json:\",string\"`", // string type in JSON

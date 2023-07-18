@@ -203,7 +203,7 @@ func (p *parser) goTypeImport(typ types.Type) string {
 
 	name = name[:lastDot] // github.com/golang-cz/gospeak/pkg
 	switch name {
-	case p.schemaPkgName, "command-line-arguments":
+	case p.schemaPkgName, "command-line-arguments", "time":
 		return ""
 	}
 
@@ -347,7 +347,6 @@ func (p *parser) parseStructField(structTypeName string, field *types.Var, struc
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to parse var %v", field.Name())
 	}
-	varType.Expr = goFieldType
 
 	structField := &schema.TypeField{
 		Name: jsonFieldName,
