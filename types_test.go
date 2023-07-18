@@ -19,12 +19,13 @@ func TestStructFieldJsonTags(t *testing.T) {
 	t.Parallel()
 
 	type webrpcType struct {
-		name        string
-		expr        string
-		t           schema.CoreType
-		goFieldName string
-		goFieldType string
-		optional    bool
+		name         string
+		expr         string
+		t            schema.CoreType
+		goFieldName  string
+		goFieldType  string
+		goTypeImport string
+		optional     bool
 	}
 
 	tt := []struct {
@@ -69,11 +70,11 @@ func TestStructFieldJsonTags(t *testing.T) {
 		},
 		{
 			in:  "ID uuid.UUID", // uuid implements encoding.TextMarshaler interface, expect string in JSON
-			out: &webrpcType{name: "ID", expr: "uuid.UUID", t: schema.T_String, goFieldName: "ID", goFieldType: "uuid.UUID"},
+			out: &webrpcType{name: "ID", expr: "uuid.UUID", t: schema.T_String, goFieldName: "ID", goFieldType: "uuid.UUID", goTypeImport: "github.com/golang-cz/gospeak/uuid"},
 		},
 		{
 			in:  "ID uuid.UUID `json:\",string\"`", // string type in JSON
-			out: &webrpcType{name: "ID", expr: "string", t: schema.T_String, goFieldName: "ID", goFieldType: "uuid.UUID"},
+			out: &webrpcType{name: "ID", expr: "string", t: schema.T_String, goFieldName: "ID", goFieldType: "uuid.UUID", goTypeImport: "github.com/golang-cz/gospeak/uuid"},
 		},
 	}
 
@@ -95,6 +96,9 @@ func TestStructFieldJsonTags(t *testing.T) {
 						},
 					},
 				},
+			}
+			if tc.out.goTypeImport != "" {
+				fields[0].TypeExtra.Meta = append(fields[0].TypeExtra.Meta, schema.TypeFieldMeta{"go.type.import": tc.out.goTypeImport})
 			}
 		}
 
