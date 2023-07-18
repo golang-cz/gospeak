@@ -47,6 +47,13 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 		underlying := v.Underlying()
 		typeName := p.goTypeName(typ)
 
+		if pkg.Path() == "time" && v.Obj().Id() == "Time" {
+			return &schema.VarType{
+				Expr: "timestamp",
+				Type: schema.T_Timestamp,
+			}, nil
+		}
+
 		// If the type implements encoding.TextMarshaler, it's a string.
 		if isTextMarshaler(v, pkg) {
 			return &schema.VarType{
@@ -86,9 +93,10 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 				}, nil
 			}
 
-			var elem types.Type // = u.Elem().Underlying()
-			// NOTE: Calling the above u.Elem().Underlying() directly fails to build with
-			//       "u.Elem undefined (type types.Type has no field or method Elem)" error
+			var elem types.Type
+			//                  = u.Elem().Underlying()
+			// NOTE: Calling the above assignment fails to build with this error:
+			//       "u.Elem undefined (type types.Type has no field or method Elem)"
 			//       even though both *types.Slice and *types.Array have the .Elem() method.
 			switch underlyingElem := u.(type) {
 			case *types.Slice:
@@ -126,13 +134,6 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 
 			if pkg == nil {
 				return p.parseNamedType(typeName, underlying)
-			}
-
-			if pkg.Path() == "time" && v.Obj().Id() == "Time" {
-				return &schema.VarType{
-					Expr: "timestamp",
-					Type: schema.T_Timestamp,
-				}, nil
 			}
 
 			return p.parseNamedType(typeName, underlying)

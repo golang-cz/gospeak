@@ -69,6 +69,14 @@ func TestStructFieldJsonTags(t *testing.T) {
 			out: &webrpcType{name: "id", expr: "string", t: schema.T_String, goFieldName: "ID", goFieldType: "int64", optional: true},
 		},
 		{
+			in:  "CreatedAt time.Time",
+			out: &webrpcType{name: "CreatedAt", expr: "time.Time", t: schema.T_Timestamp, goFieldName: "CreatedAt", goFieldType: "time.Time", goTypeImport: "time"},
+		},
+		{
+			in:  "DeletedAt *time.Time",
+			out: &webrpcType{name: "DeletedAt", expr: "*time.Time", t: schema.T_Timestamp, goFieldName: "DeletedAt", goFieldType: "*time.Time", goTypeImport: "time", optional: true},
+		},
+		{
 			in:  "ID uuid.UUID", // uuid implements encoding.TextMarshaler interface, expect string in JSON
 			out: &webrpcType{name: "ID", expr: "uuid.UUID", t: schema.T_String, goFieldName: "ID", goFieldType: "uuid.UUID", goTypeImport: "github.com/golang-cz/gospeak/uuid"},
 		},
@@ -182,6 +190,7 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 
 	import (
 		"context"
+		"time"
 		
 		"github.com/golang-cz/gospeak/uuid"
 	)
@@ -198,6 +207,7 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 
 	// Ensure all the imports are used.
 	var _ uuid.UUID
+	var _ time.Time
 	`, inputFields)
 
 	wd, err := os.Getwd()
