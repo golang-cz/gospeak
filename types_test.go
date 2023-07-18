@@ -18,23 +18,23 @@ import (
 func TestStructFieldJsonTags(t *testing.T) {
 	t.Parallel()
 
-	type webrpcType struct {
-		name         string
-		expr         string
-		t            schema.CoreType
-		goFieldName  string
-		goFieldType  string
-		goTypeImport string
-		optional     bool
+	type field struct {
+		name     string
+		expr     string
+		t        schema.CoreType
+		goName   string
+		goType   string
+		goImport string
+		optional bool
 	}
 
 	tt := []struct {
 		in  string
-		out *webrpcType
+		out *field
 	}{
 		{
 			in:  "ID int64", // default name
-			out: &webrpcType{name: "ID", expr: "int64", t: schema.T_Int64, goFieldName: "ID", goFieldType: "int64"},
+			out: &field{name: "ID", expr: "int64", t: schema.T_Int64, goName: "ID", goType: "int64"},
 		},
 		{
 			in:  "id int64", // unexported field
@@ -46,43 +46,43 @@ func TestStructFieldJsonTags(t *testing.T) {
 		},
 		{
 			in:  "ID *int64", // optional
-			out: &webrpcType{name: "ID", expr: "*int64", t: schema.T_Int64, goFieldName: "ID", goFieldType: "*int64", optional: true},
+			out: &field{name: "ID", expr: "*int64", t: schema.T_Int64, goName: "ID", goType: "*int64", optional: true},
 		},
 		{
 			in:  "ID int64 `json:\"renamed_id\"`", // renamed in JSON
-			out: &webrpcType{name: "renamed_id", expr: "int64", t: schema.T_Int64, goFieldName: "ID", goFieldType: "int64"},
+			out: &field{name: "renamed_id", expr: "int64", t: schema.T_Int64, goName: "ID", goType: "int64"},
 		},
 		{
 			in:  "ID int64 `json:\",string\"`", // string type in JSON
-			out: &webrpcType{name: "ID", expr: "string", t: schema.T_String, goFieldName: "ID", goFieldType: "int64"},
+			out: &field{name: "ID", expr: "string", t: schema.T_String, goName: "ID", goType: "int64"},
 		},
 		{
 			in:  "ID int64 `json:\"id,string\"`", // string type in JSON
-			out: &webrpcType{name: "id", expr: "string", t: schema.T_String, goFieldName: "ID", goFieldType: "int64"},
+			out: &field{name: "id", expr: "string", t: schema.T_String, goName: "ID", goType: "int64"},
 		},
 		{
 			in:  "ID int64 `json:\",omitempty\"`", // optional in JSON
-			out: &webrpcType{name: "ID", expr: "int64", t: schema.T_Int64, goFieldName: "ID", goFieldType: "int64", optional: true},
+			out: &field{name: "ID", expr: "int64", t: schema.T_Int64, goName: "ID", goType: "int64", optional: true},
 		},
 		{
 			in:  "ID int64 `json:\"id,string,omitempty\"`", // optional string type in JSON
-			out: &webrpcType{name: "id", expr: "string", t: schema.T_String, goFieldName: "ID", goFieldType: "int64", optional: true},
+			out: &field{name: "id", expr: "string", t: schema.T_String, goName: "ID", goType: "int64", optional: true},
 		},
 		{
 			in:  "CreatedAt time.Time",
-			out: &webrpcType{name: "CreatedAt", expr: "time.Time", t: schema.T_Timestamp, goFieldName: "CreatedAt", goFieldType: "time.Time", goTypeImport: "time"},
+			out: &field{name: "CreatedAt", expr: "time.Time", t: schema.T_Timestamp, goName: "CreatedAt", goType: "time.Time", goImport: "time"},
 		},
 		{
 			in:  "DeletedAt *time.Time",
-			out: &webrpcType{name: "DeletedAt", expr: "*time.Time", t: schema.T_Timestamp, goFieldName: "DeletedAt", goFieldType: "*time.Time", goTypeImport: "time", optional: true},
+			out: &field{name: "DeletedAt", expr: "*time.Time", t: schema.T_Timestamp, goName: "DeletedAt", goType: "*time.Time", goImport: "time", optional: true},
 		},
 		{
 			in:  "ID uuid.UUID", // uuid implements encoding.TextMarshaler interface, expect string in JSON
-			out: &webrpcType{name: "ID", expr: "uuid.UUID", t: schema.T_String, goFieldName: "ID", goFieldType: "uuid.UUID", goTypeImport: "github.com/golang-cz/gospeak/uuid"},
+			out: &field{name: "ID", expr: "uuid.UUID", t: schema.T_String, goName: "ID", goType: "uuid.UUID", goImport: "github.com/golang-cz/gospeak/uuid"},
 		},
 		{
 			in:  "ID uuid.UUID `json:\",string\"`", // string type in JSON
-			out: &webrpcType{name: "ID", expr: "string", t: schema.T_String, goFieldName: "ID", goFieldType: "uuid.UUID", goTypeImport: "github.com/golang-cz/gospeak/uuid"},
+			out: &field{name: "ID", expr: "string", t: schema.T_String, goName: "ID", goType: "uuid.UUID", goImport: "github.com/golang-cz/gospeak/uuid"},
 		},
 	}
 
@@ -99,14 +99,14 @@ func TestStructFieldJsonTags(t *testing.T) {
 					TypeExtra: schema.TypeExtra{
 						Optional: tc.out.optional,
 						Meta: []schema.TypeFieldMeta{
-							{"go.field.name": tc.out.goFieldName},
-							{"go.field.type": tc.out.goFieldType},
+							{"go.field.name": tc.out.goName},
+							{"go.field.type": tc.out.goType},
 						},
 					},
 				},
 			}
-			if tc.out.goTypeImport != "" {
-				fields[0].TypeExtra.Meta = append(fields[0].TypeExtra.Meta, schema.TypeFieldMeta{"go.type.import": tc.out.goTypeImport})
+			if tc.out.goImport != "" {
+				fields[0].TypeExtra.Meta = append(fields[0].TypeExtra.Meta, schema.TypeFieldMeta{"go.type.import": tc.out.goImport})
 			}
 		}
 
@@ -124,23 +124,23 @@ func TestStructFieldJsonTags(t *testing.T) {
 func TestStructSliceField(t *testing.T) {
 	t.Parallel()
 
-	type webrpcType struct {
-		name        string
-		elemExpr    string          // element
-		elemT       schema.CoreType // element
-		goFieldName string
-		goFieldType string
-		optional    bool
-		imports     []string
+	type field struct {
+		name     string
+		elemExpr string          // element
+		elemT    schema.CoreType // element
+		goName   string
+		goType   string
+		optional bool
+		imports  []string
 	}
 
 	tt := []struct {
 		in  string
-		out *webrpcType
+		out *field
 	}{
 		{
 			in:  "ID []int64",
-			out: &webrpcType{name: "ID", elemExpr: "int64", elemT: schema.T_Int64, goFieldName: "ID", goFieldType: "[]int64"},
+			out: &field{name: "ID", elemExpr: "int64", elemT: schema.T_Int64, goName: "ID", goType: "[]int64"},
 		},
 	}
 
@@ -166,8 +166,8 @@ func TestStructSliceField(t *testing.T) {
 						TypeExtra: schema.TypeExtra{
 							Optional: tc.out.optional,
 							Meta: []schema.TypeFieldMeta{
-								{"go.field.name": tc.out.goFieldName},
-								{"go.field.type": tc.out.goFieldType},
+								{"go.field.name": tc.out.goName},
+								{"go.field.type": tc.out.goType},
 							},
 						},
 					},
@@ -176,12 +176,6 @@ func TestStructSliceField(t *testing.T) {
 		)
 	}
 }
-
-// TODO: Test extra struct tags.
-// {
-// 	in:  "ID int64 `db:\"id\", json:\"id\"`", // test extra tags
-// 	out: &webrpcType{name: "id", expr: "int64", t: schema.T_Int64, goFieldName: "ID", goFieldType: "int64"},
-// },
 
 func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 	t.Helper()
@@ -363,18 +357,6 @@ func TestJsonUnmarshalerRegex(t *testing.T) {
 		}
 	}
 }
-
-// exported := packagestest.Export(t, exporter, []packagestest.Module{{
-// 	Name: "fake",
-// 	Files: map[string]interface{}{
-// 		"api.go":      "package foo\nfunc g(){}\n",
-// 	},
-// 	Overlay: map[string][]byte{
-// 		"a.go":      []byte("package foox\nfunc g(){}\n"),
-// 		"a_test.go": []byte("package foox\nfunc f(){}\n"),
-// 	},
-// }})
-// defer exported.Cleanup()
 
 func coloredDiff(x, y interface{}, opts ...cmp.Option) string {
 	escapeCode := func(code int) string {
