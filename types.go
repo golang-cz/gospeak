@@ -47,11 +47,13 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 		underlying := v.Underlying()
 		typeName := p.goTypeName(typ)
 
-		if pkg.Path() == "time" && v.Obj().Id() == "Time" {
-			return &schema.VarType{
-				Expr: "timestamp",
-				Type: schema.T_Timestamp,
-			}, nil
+		if pkg != nil {
+			if pkg.Path() == "time" && v.Obj().Id() == "Time" {
+				return &schema.VarType{
+					Expr: "timestamp",
+					Type: schema.T_Timestamp,
+				}, nil
+			}
 		}
 
 		// If the type implements encoding.TextMarshaler, it's a string.
