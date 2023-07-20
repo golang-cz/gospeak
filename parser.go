@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/webrpc/webrpc/schema"
 	"golang.org/x/tools/go/packages"
 )
@@ -26,7 +25,7 @@ type Target struct {
 func Parse(filePath string) ([]*Target, error) {
 	path, err := filepath.Abs(filePath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get directory from %q", path)
+		return nil, fmt.Errorf("failed to get directory from %q: %w", path, err)
 	}
 
 	file, err := os.Stat(path)
@@ -49,7 +48,7 @@ func Parse(filePath string) ([]*Target, error) {
 
 	pkgs, err := packages.Load(cfg, path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to load Go packages from %q", path)
+		return nil, fmt.Errorf("failed to load Go packages from %q: %w", path, err)
 	}
 
 	// Print all errors.
@@ -64,7 +63,7 @@ func Parse(filePath string) ([]*Target, error) {
 	}
 
 	if len(pkgs) != 1 {
-		return nil, errors.Errorf("failed to load Go package (len=%v) from %q", len(pkgs), path)
+		return nil, fmt.Errorf("failed to load Go package (len=%v) from %q", len(pkgs), path)
 	}
 	pkg := pkgs[0]
 
@@ -75,7 +74,7 @@ func Parse(filePath string) ([]*Target, error) {
 	// Collect Go interfaces with `//go:webrpc` comments.
 	targets, err := collectInterfaces(pkg)
 	if err != nil {
-		return nil, errors.Wrapf(err, "collecting Go interfaces")
+		return nil, fmt.Errorf("collecting Go interfaces: %w", err)
 	}
 
 	cache := map[string]*schema.WebRPCSchema{}
@@ -107,16 +106,16 @@ func Parse(filePath string) ([]*Target, error) {
 
 		obj := scope.Lookup(target.InterfaceName)
 		if obj == nil {
-			return nil, errors.Errorf("type interface %v{} not found", target.InterfaceName)
+			return nil, fmt.Errorf("type interface %v{} not found", target.InterfaceName)
 		}
 
 		iface, ok := obj.Type().Underlying().(*types.Interface)
 		if !ok {
-			return nil, errors.Errorf("type %v{} is %T", target.InterfaceName, obj.Type().Underlying())
+			return nil, fmt.Errorf("type %v{} is %T", target.InterfaceName, obj.Type().Underlying())
 		}
 
 		if err := p.parseInterfaceMethods(iface, target.InterfaceName); err != nil {
-			return nil, errors.Wrapf(err, "failed to parse interface %q", target.InterfaceName)
+			return nil, fmt.Errorf("failed to parse interface %q: %w", target.InterfaceName, err)
 		}
 
 		target.Schema = p.schema

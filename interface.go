@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"go/types"
 
-	"github.com/pkg/errors"
 	"github.com/webrpc/webrpc/schema"
 )
 
@@ -25,36 +24,36 @@ func (p *parser) parseInterfaceMethods(iface *types.Interface, name string) erro
 
 		methodSignature, ok := method.Type().(*types.Signature)
 		if !ok {
-			return errors.Errorf("%v(): failed to get method signature", methodName)
+			return fmt.Errorf("%v(): failed to get method signature", methodName)
 		}
 
 		methodParams := methodSignature.Params()
 		inputs, err := p.getMethodArguments(methodParams, true)
 		if err != nil {
-			return errors.Wrapf(err, "%v(): failed to get inputs", methodName)
+			return fmt.Errorf("%v(): failed to get inputs: %w", methodName, err)
 		}
 
 		// First method argument must be of type context.Context.
 		if methodParams.Len() == 0 {
-			return errors.Errorf("%v(): first method argument must be context.Context: no arguments defined", methodName)
+			return fmt.Errorf("%v(): first method argument must be context.Context: no arguments defined", methodName)
 		}
 		if err := ensureContextType(methodParams.At(0).Type()); err != nil {
-			return errors.Wrapf(err, "%v(): first method argument must be context.Context", methodName)
+			return fmt.Errorf("%v(): first method argument must be context.Context: %w", methodName, err)
 		}
 		inputs = inputs[1:] // Cut it off. The gen/golang adds context.Context as first method argument automatically.
 
 		methodResults := methodSignature.Results()
 		outputs, err := p.getMethodArguments(methodResults, false)
 		if err != nil {
-			return errors.Wrapf(err, "%v(): failed to get outputs", methodName)
+			return fmt.Errorf("%v(): failed to get outputs: %w", methodName, err)
 		}
 
 		// Last method return value must be of type error.
 		if methodResults.Len() == 0 {
-			return errors.Errorf("%v(): last return value must be context.Context: no return values defined", methodName)
+			return fmt.Errorf("%v(): last return value must be context.Context: no return values defined", methodName)
 		}
 		if err := ensureErrorType(methodResults.At(methodResults.Len() - 1).Type()); err != nil {
-			return errors.Wrapf(err, "%v(): first method argument must be context.Context", methodName)
+			return fmt.Errorf("%v(): first method argument must be context.Context: %w", methodName, err)
 		}
 		outputs = outputs[:len(outputs)-1] // Cut it off. The gen/golang adds error as a last return value automatically.
 
@@ -94,7 +93,7 @@ func (p *parser) getMethodArguments(params *types.Tuple, isInput bool) ([]*schem
 
 		varType, err := p.parseType(typ) // Type name will be resolved deeper down the stack.
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse argument %v %v", name, typ)
+			return nil, fmt.Errorf("failed to parse argument %v %v: %w", name, typ, err)
 		}
 
 		arg := &schema.MethodArgument{
@@ -113,18 +112,18 @@ func (p *parser) getMethodArguments(params *types.Tuple, isInput bool) ([]*schem
 func ensureContextType(typ types.Type) (err error) {
 	namedType, ok := typ.(*types.Named)
 	if !ok {
-		return errors.Errorf("expected named type: found type %T (%+v)", typ, typ)
+		return fmt.Errorf("expected named type: found type %T (%+v)", typ, typ)
 	}
 
 	if _, ok := namedType.Underlying().(*types.Interface); !ok {
-		return errors.Errorf("expected underlying interface: found type %T (%+v)", typ, typ)
+		return fmt.Errorf("expected underlying interface: found type %T (%+v)", typ, typ)
 	}
 
 	pkgName := namedType.Obj().Pkg().Name()
 	typeName := namedType.Obj().Name()
 
 	if pkgName != "context" && typeName != "Context" {
-		return errors.Errorf("expected context.Context: found %v.%v", pkgName, typeName)
+		return fmt.Errorf("expected context.Context: found %v.%v", pkgName, typeName)
 	}
 
 	return nil
@@ -133,18 +132,18 @@ func ensureContextType(typ types.Type) (err error) {
 func ensureErrorType(typ types.Type) (err error) {
 	namedType, ok := typ.(*types.Named)
 	if !ok {
-		return errors.Errorf("expected named type: found type %T (%+v)", typ, typ)
+		return fmt.Errorf("expected named type: found type %T (%+v)", typ, typ)
 	}
 
 	if _, ok := namedType.Underlying().(*types.Interface); !ok {
-		return errors.Errorf("expected underlying interface: found type %T (%+v)", typ, typ)
+		return fmt.Errorf("expected underlying interface: found type %T (%+v)", typ, typ)
 	}
 
 	pkgName := namedType.Obj().Pkg()
 	typeName := namedType.Obj().Name()
 
 	if pkgName != nil && typeName != "error" {
-		return errors.Errorf("expected error: found %v.%v", pkgName, typeName)
+		return fmt.Errorf("expected error: found %v.%v", pkgName, typeName)
 	}
 
 	return nil

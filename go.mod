@@ -4,8 +4,7 @@ go 1.20
 
 require (
 	github.com/davecgh/go-spew v1.1.1
-	github.com/golang-cz/textcase v1.2.0
-	github.com/pkg/errors v0.9.1
+	github.com/google/go-cmp v0.5.9
 	github.com/webrpc/webrpc v0.11.2
 	golang.org/x/tools v0.11.0
 )
@@ -13,13 +12,14 @@ require (
 require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/golang-cz/textcase v1.2.0 // indirect
 	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/posener/diff v0.0.1 // indirect
 	github.com/posener/gitfs v1.2.1 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect

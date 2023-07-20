@@ -8,7 +8,6 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/pkg/errors"
 	"github.com/webrpc/webrpc/schema"
 )
 
@@ -112,7 +111,7 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 			if basic, ok := elem.(*types.Basic); ok {
 				basicType, err := p.parseBasic(basic)
 				if err != nil {
-					return nil, errors.Wrap(err, "failed to parse []namedBasicType")
+					return nil, fmt.Errorf("failed to parse []namedBasicType: %w", err)
 				}
 				return &schema.VarType{
 					Expr: fmt.Sprintf("[]%v", basicType.String()),
@@ -159,7 +158,7 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 		return p.parseNamedType(typeName, v.Elem())
 
 	default:
-		return nil, errors.Errorf("unsupported argument type %T", typ)
+		return nil, fmt.Errorf("unsupported argument type %T", typ)
 	}
 }
 
@@ -213,7 +212,7 @@ func (p *parser) goTypeImport(typ types.Type) string {
 func (p *parser) parseBasic(typ *types.Basic) (*schema.VarType, error) {
 	var varType schema.VarType
 	if err := schema.ParseVarTypeExpr(p.schema, typ.Name(), &varType); err != nil {
-		return nil, errors.Wrapf(err, "failed to parse basic type: %v", typ.Name())
+		return nil, fmt.Errorf("failed to parse basic type: %v: %w", typ.Name(), err)
 	}
 
 	return &varType, nil
@@ -337,7 +336,7 @@ func (p *parser) parseStructField(structTypeName string, field *types.Var, struc
 
 	varType, err := p.parseNamedType(structTypeName, fieldType)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse var %v", field.Name())
+		return nil, fmt.Errorf("failed to parse var %v: %w", field.Name(), err)
 	}
 
 	structField := &schema.TypeField{
@@ -366,7 +365,7 @@ func (p *parser) parseStructField(structTypeName string, field *types.Var, struc
 func (p *parser) parseSlice(typeName string, sliceTyp *types.Slice) (*schema.VarType, error) {
 	elem, err := p.parseNamedType(typeName, sliceTyp.Elem())
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse slice type")
+		return nil, fmt.Errorf("failed to parse slice type: %w", err)
 	}
 
 	varType := &schema.VarType{
@@ -392,12 +391,12 @@ func (p *parser) parseInterface(typeName string, iface *types.Interface) (*schem
 func (p *parser) parseMap(typeName string, m *types.Map) (*schema.VarType, error) {
 	key, err := p.parseNamedType(typeName, m.Key())
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse map key type")
+		return nil, fmt.Errorf("failed to parse map key type: %w", err)
 	}
 
 	value, err := p.parseNamedType(typeName, m.Elem())
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse map value type")
+		return nil, fmt.Errorf("failed to parse map value type: %w", err)
 	}
 
 	varType := &schema.VarType{

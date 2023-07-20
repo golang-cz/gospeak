@@ -10,7 +10,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
+
 	"github.com/webrpc/webrpc/schema"
 	"golang.org/x/tools/go/packages"
 )
@@ -267,12 +267,12 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 
 	obj := scope.Lookup("TestStruct")
 	if obj == nil {
-		t.Fatal(inputFields, errors.Errorf("type TestStruct not defined"))
+		t.Fatal(inputFields, fmt.Errorf("type TestStruct not defined"))
 	}
 
 	testStruct, ok := obj.Type().Underlying().(*types.Struct)
 	if !ok {
-		t.Fatal(inputFields, errors.Errorf("type TestStruct is %T", obj.Type().Underlying()))
+		t.Fatal(inputFields, fmt.Errorf("type TestStruct is %T", obj.Type().Underlying()))
 	}
 
 	p := &parser{
@@ -294,7 +294,7 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 
 	_, err = p.parseStruct("TestStruct", testStruct)
 	if err != nil {
-		t.Fatal(inputFields, errors.Wrapf(err, "failed to parse struct TestStruct"))
+		t.Fatal(inputFields, fmt.Errorf("failed to parse struct TestStruct: %w", err))
 	}
 
 	if len(p.schema.Types) != 1 {
