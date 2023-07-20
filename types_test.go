@@ -22,6 +22,7 @@ func TestStructFieldJsonTags(t *testing.T) {
 		name     string
 		expr     string
 		t        schema.CoreType
+		jsonTag  string
 		goName   string
 		goType   string
 		goImport string
@@ -50,23 +51,23 @@ func TestStructFieldJsonTags(t *testing.T) {
 		},
 		{
 			in:  "ID int64 `json:\"renamed_id\"`", // renamed in JSON
-			out: &field{name: "renamed_id", expr: "int64", t: schema.T_Int64, goName: "ID", goType: "int64"},
+			out: &field{name: "renamed_id", expr: "int64", t: schema.T_Int64, jsonTag: "renamed_id", goName: "ID", goType: "int64"},
 		},
 		{
 			in:  "ID int64 `json:\",string\"`", // string type in JSON
-			out: &field{name: "ID", expr: "string", t: schema.T_String, goName: "ID", goType: "int64"},
+			out: &field{name: "ID", expr: "string", t: schema.T_String, jsonTag: ",string", goName: "ID", goType: "int64"},
 		},
 		{
 			in:  "ID int64 `json:\"id,string\"`", // string type in JSON
-			out: &field{name: "id", expr: "string", t: schema.T_String, goName: "ID", goType: "int64"},
+			out: &field{name: "id", expr: "string", t: schema.T_String, jsonTag: "id,string", goName: "ID", goType: "int64"},
 		},
 		{
 			in:  "ID int64 `json:\",omitempty\"`", // optional in JSON
-			out: &field{name: "ID", expr: "int64", t: schema.T_Int64, goName: "ID", goType: "int64", optional: true},
+			out: &field{name: "ID", expr: "int64", t: schema.T_Int64, jsonTag: ",omitempty", goName: "ID", goType: "int64", optional: true},
 		},
 		{
 			in:  "ID int64 `json:\"id,string,omitempty\"`", // optional string type in JSON
-			out: &field{name: "id", expr: "string", t: schema.T_String, goName: "ID", goType: "int64", optional: true},
+			out: &field{name: "id", expr: "string", t: schema.T_String, jsonTag: "id,string,omitempty", goName: "ID", goType: "int64", optional: true},
 		},
 		{
 			in:  "CreatedAt time.Time",
@@ -82,7 +83,7 @@ func TestStructFieldJsonTags(t *testing.T) {
 		},
 		{
 			in:  "ID uuid.UUID `json:\",string\"`", // string type in JSON
-			out: &field{name: "ID", expr: "string", t: schema.T_String, goName: "ID", goType: "uuid.UUID", goImport: "github.com/golang-cz/gospeak/uuid"},
+			out: &field{name: "ID", expr: "string", t: schema.T_String, jsonTag: ",string", goName: "ID", goType: "uuid.UUID", goImport: "github.com/golang-cz/gospeak/uuid"},
 		},
 	}
 
@@ -107,6 +108,9 @@ func TestStructFieldJsonTags(t *testing.T) {
 			}
 			if tc.out.goImport != "" {
 				fields[0].TypeExtra.Meta = append(fields[0].TypeExtra.Meta, schema.TypeFieldMeta{"go.type.import": tc.out.goImport})
+			}
+			if tc.out.jsonTag != "" {
+				fields[0].TypeExtra.Meta = append(fields[0].TypeExtra.Meta, schema.TypeFieldMeta{"go.tag.json": tc.out.jsonTag})
 			}
 		}
 
@@ -304,6 +308,39 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 	}
 
 	return
+}
+
+func TestJsonTagRegex(t *testing.T) {
+	tt := []struct {
+		in  string
+		out jsonTag
+	}{
+		{in: ``},
+		{in: `db:"id"`},
+		{in: `json:"id"`, out: jsonTag{Name: "id", Value: "id"}},
+		{in: `json:"id,whatever"`, out: jsonTag{Name: "id", Value: "id,whatever"}},
+		{in: `json:"id,whatever,else"`, out: jsonTag{Name: "id", Value: "id,whatever,else"}},
+		{in: `json:"id,string"`, out: jsonTag{Name: "id", Value: "id,string", IsString: true}},
+		{in: `json:"id,string,omit"`, out: jsonTag{Name: "id", Value: "id,string,omit", IsString: true}},
+		{in: `json:"id,string,omitempty"`, out: jsonTag{Name: "id", Value: "id,string,omitempty", IsString: true, Omitempty: true}},
+		{in: `json:"id,omitempty,string"`, out: jsonTag{Name: "id", Value: "id,omitempty,string", IsString: true, Omitempty: true}},
+		{in: `json:"id,string,omitempty"`, out: jsonTag{Name: "id", Value: "id,string,omitempty", IsString: true, Omitempty: true}},
+		{in: `json:"ID,string,omitempty"`, out: jsonTag{Name: "ID", Value: "ID,string,omitempty", IsString: true, Omitempty: true}},
+		{in: `json:"renamed_fieldName99"`, out: jsonTag{Name: "renamed_fieldName99", Value: "renamed_fieldName99"}},
+		{in: `xxx:"X X X" json:"id,string" yyy:"Y Y Y"`, out: jsonTag{Name: "id", Value: "id,string", IsString: true}},
+		{in: `db:"id,omitempty,pk" json:"id,string"`, out: jsonTag{Name: "id", Value: "id,string", IsString: true}},
+		{in: `db:"id,omitempty,pk" json:"External_ID,string,omitempty" someOtherTag:"some,other:value"`, out: jsonTag{Name: "External_ID", Value: "External_ID,string,omitempty", IsString: true, Omitempty: true}},
+	}
+	for _, tc := range tt {
+		jsonTag, ok := getJsonTag(tc.in)
+		if ok != (tc.out.Value != "") {
+			t.Errorf("expected ok=%v", tc.out)
+		}
+
+		if !cmp.Equal(jsonTag, tc.out) {
+			t.Errorf(cmp.Diff(jsonTag, tc.out))
+		}
+	}
 }
 
 func TestTextMarshalerRegex(t *testing.T) {

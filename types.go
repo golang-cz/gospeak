@@ -263,14 +263,6 @@ func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (*schema.
 	}, nil
 }
 
-// This regex will return the following three submatches,
-// given `db:"id,omitempty,pk" json:"id,string"` struct tag:
-//
-//	[0]: json:"id,string"
-//	[1]: id
-//	[2]: ,string
-var jsonTagRegex, _ = regexp.Compile(`\s?json:\"([^,\"]*)(,[^\"]*)?\"`)
-
 // parses single Go struct field
 // if the field is embedded, ie. `json:",inline"`, recursively parse
 func (p *parser) parseStructField(structTypeName string, field *types.Var, structTags string) (*schema.TypeField, error) {
@@ -284,23 +276,19 @@ func (p *parser) parseStructField(structTypeName string, field *types.Var, struc
 	goFieldType := p.goTypeName(fieldType)
 	goFieldImport := p.goTypeImport(fieldType)
 
-	if strings.Contains(structTags, `json:"`) {
-		submatches := jsonTagRegex.FindStringSubmatch(structTags)
-		// Submatches from the jsonTagRegex:
-		// [0]: json:"deleted_by,omitempty,string"
-		// [1]: deleted_by
-		// [2]: ,omitempty,string
-		if len(submatches) != 3 {
-			return nil, errors.Errorf("unexpected number of json struct tag submatches")
-		}
-		if submatches[1] == "-" { // struct field ignored by `json:"-"` struct tag
+	jsonTag, ok := getJsonTag(structTags)
+	if ok {
+		if jsonTag.Name == "-" { // struct field ignored by `json:"-"` struct tag
 			return nil, nil
 		}
-		if submatches[1] != "" { // struct field name renamed by json struct tag
-			jsonFieldName = submatches[1]
+
+		if jsonTag.Name != "" {
+			jsonFieldName = jsonTag.Name
 		}
-		optional = strings.Contains(submatches[2], ",omitempty")
-		if strings.Contains(submatches[2], ",string") { // field type should be string in JSON
+
+		optional = jsonTag.Omitempty
+
+		if jsonTag.IsString { // struct field forced to be string by `json:",string"`
 			structField := &schema.TypeField{
 				Name: jsonFieldName,
 				Type: &schema.VarType{
@@ -320,6 +308,10 @@ func (p *parser) parseStructField(structTypeName string, field *types.Var, struc
 					schema.TypeFieldMeta{"go.type.import": goFieldImport},
 				)
 			}
+			structField.TypeExtra.Meta = append(structField.TypeExtra.Meta,
+				schema.TypeFieldMeta{"go.tag.json": jsonTag.Value},
+			)
+
 			return structField, nil
 		}
 	}
@@ -359,6 +351,9 @@ func (p *parser) parseStructField(structTypeName string, field *types.Var, struc
 		structField.TypeExtra.Meta = append(structField.TypeExtra.Meta,
 			schema.TypeFieldMeta{"go.type.import": goFieldImport},
 		)
+	}
+	if jsonTag.Value != "" {
+		structField.TypeExtra.Meta = append(structField.TypeExtra.Meta, schema.TypeFieldMeta{"go.tag.json": jsonTag.Value})
 	}
 
 	return structField, nil
@@ -462,4 +457,44 @@ func appendOrOverrideExistingField(slice []*schema.TypeField, newItem *schema.Ty
 	}
 	// And then append the new item at the end of the slice.
 	return append(slice, newItem)
+}
+
+// This regex will return the following three submatches,
+// given `db:"id,omitempty,pk" json:"id,string"` struct tag:
+//
+//	[0]: json:"id,string"
+//	[1]: id
+//	[2]: ,string
+var jsonTagRegex, _ = regexp.Compile(`\s?json:\"([^,\"]*)(,[^\"]*)?\"`)
+
+type jsonTag struct {
+	Name      string
+	Value     string
+	IsString  bool
+	Omitempty bool
+}
+
+func getJsonTag(structTags string) (jsonTag, bool) {
+	if !strings.Contains(structTags, `json:"`) {
+		return jsonTag{}, false
+	}
+
+	submatches := jsonTagRegex.FindStringSubmatch(structTags)
+
+	// Submatches from the jsonTagRegex:
+	// [0]: json:"deleted_by,omitempty,string"
+	// [1]: deleted_by
+	// [2]: ,omitempty,string
+	if len(submatches) != 3 {
+		return jsonTag{}, false
+	}
+
+	jsonTag := jsonTag{
+		Name:      submatches[1],
+		Value:     submatches[1] + submatches[2],
+		IsString:  strings.Contains(submatches[2], ",string"),
+		Omitempty: strings.Contains(submatches[2], ",omitempty"),
+	}
+
+	return jsonTag, true
 }
