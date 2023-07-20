@@ -8,7 +8,7 @@
    "name": "Tag",
    "fields": [
     {
-     "name": "id",
+     "name": "ID",
      "type": "int64",
      "meta": [
       {
@@ -20,7 +20,7 @@
      ]
     },
     {
-     "name": "name",
+     "name": "Name",
      "type": "string",
      "meta": [
       {
@@ -39,13 +39,34 @@
    "fields": [
     {
      "name": "id",
-     "type": "int64",
+     "type": "string",
      "meta": [
       {
        "go.field.name": "ID"
       },
       {
        "go.field.type": "int64"
+      },
+      {
+       "go.tag.json": "id,string"
+      }
+     ]
+    },
+    {
+     "name": "uuid",
+     "type": "string",
+     "meta": [
+      {
+       "go.field.name": "UUID"
+      },
+      {
+       "go.field.type": "uuid.UUID"
+      },
+      {
+       "go.type.import": "github.com/google/uuid"
+      },
+      {
+       "go.tag.json": "uuid,string"
       }
      ]
     },
@@ -58,6 +79,9 @@
       },
       {
        "go.field.type": "string"
+      },
+      {
+       "go.tag.json": "name"
       }
      ]
     },
@@ -70,30 +94,107 @@
       },
       {
        "go.field.type": "bool"
+      },
+      {
+       "go.tag.json": "available"
       }
      ]
     },
     {
-     "name": "photoUrlS",
-     "type": "string",
+     "name": "photoUrls",
+     "type": "[]string",
      "meta": [
       {
        "go.field.name": "PhotoURLs"
       },
       {
        "go.field.type": "[]string"
+      },
+      {
+       "go.tag.json": "photoUrls"
       }
      ]
     },
     {
      "name": "tags",
-     "type": "Tag",
+     "type": "[]Tag",
      "meta": [
       {
        "go.field.name": "Tags"
       },
       {
+       "go.field.type": "[]Tag"
+      },
+      {
+       "go.tag.json": "tags"
+      }
+     ]
+    },
+    {
+     "name": "createdAt",
+     "type": "timestamp",
+     "meta": [
+      {
+       "go.field.name": "CreatedAt"
+      },
+      {
+       "go.field.type": "time.Time"
+      },
+      {
+       "go.tag.json": "createdAt"
+      }
+     ]
+    },
+    {
+     "name": "deletedAt",
+     "type": "timestamp",
+     "optional": true,
+     "meta": [
+      {
+       "go.field.name": "DeletedAt"
+      },
+      {
+       "go.field.type": "*time.Time"
+      },
+      {
+       "go.tag.json": "deletedAt"
+      }
+     ]
+    },
+    {
+     "name": "Tag",
+     "type": "Tag",
+     "meta": [
+      {
+       "go.field.name": "Tag"
+      },
+      {
        "go.field.type": "Tag"
+      }
+     ]
+    },
+    {
+     "name": "TagPtr",
+     "type": "Tag",
+     "optional": true,
+     "meta": [
+      {
+       "go.field.name": "TagPtr"
+      },
+      {
+       "go.field.type": "*Tag"
+      }
+     ]
+    },
+    {
+     "name": "TagsPtr",
+     "type": "[]Tag",
+     "meta": [
+      {
+       "go.field.name": "TagsPtr"
+      },
+      {
+       "go.field.type": "[]*Tag"
       }
      ]
     }

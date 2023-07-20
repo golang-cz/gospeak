@@ -1,12 +1,19 @@
 package proto
 
-import "context"
+import (
+	"context"
+	"time"
 
-//go:webrpc golang@v0.10.0 -server -pkg=server -out=./server/server.gen.go
-//go:webrpc golang@v0.10.0 -client -pkg=client -out=./client/petstore.gen.go
-//go:webrpc typescript@v0.10.0 -client -out=./petstore.gen.ts
+	"github.com/google/uuid"
+)
+
 //go:webrpc json -out=./petstore.gen.json
-//go:webrpc openapi@v0.10.0 -out=./petstore.gen.yaml
+//go:webrpc /Users/vojtechvitek/webrpc/gen-golang -server -importTypesFrom=github.com/golang-cz/gospeak/_examples/petStore/proto -legacyErrors=true -pkg=server -out=./server/server.gen.go
+//go:xxx /Users/vojtechvitek/webrpc/gen-golang -server -legacyErrors=true -pkg=server -out=./server/server.gen.go
+//go:webrpc /Users/vojtechvitek/webrpc/gen-golang -client -pkg=client -out=./client/petstore.gen.go
+//go:xxx typescript -client -out=./petstore.gen.ts
+//go:xxx json -out=./petstore.gen.json
+//go:xxx openapi -out=./petstore.gen.yaml
 type PetStore interface {
 	GetPet(ctx context.Context, ID int64) (pet *Pet, err error)
 	ListPets(ctx context.Context) (pets []*Pet, err error)
@@ -16,11 +23,19 @@ type PetStore interface {
 }
 
 type Pet struct {
-	ID        int64
-	Name      string
-	Available bool
-	PhotoURLs []string
-	Tags      []Tag
+	ID        int64      `json:"id,string"`
+	UUID      uuid.UUID  `json:"uuid,string"`
+	Name      string     `json:"name"`
+	Available bool       `json:"available"`
+	PhotoURLs []string   `json:"photoUrls"`
+	Tags      []Tag      `json:"tags"`
+	CreatedAt time.Time  `json:"createdAt"`
+	DeletedAt *time.Time `json:"deletedAt"`
+
+	// Test
+	Tag     Tag `tag`
+	TagPtr  *Tag
+	TagsPtr []*Tag
 }
 
 type Tag struct {

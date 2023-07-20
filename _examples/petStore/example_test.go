@@ -8,8 +8,10 @@ import (
 	"testing"
 
 	"github.com/golang-cz/gospeak/_examples/petStore/client"
+	"github.com/golang-cz/gospeak/_examples/petStore/proto"
 	"github.com/golang-cz/gospeak/_examples/petStore/server"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var serverUrl = flag.String("serverUrl", "", "server URL")
@@ -18,7 +20,7 @@ func TestPetStore(t *testing.T) {
 	if *serverUrl == "" {
 		// Run server, if not provided.
 		api := &server.API{
-			PetStore: map[int64]*server.Pet{},
+			PetStore: map[int64]*proto.Pet{},
 		}
 
 		srv := httptest.NewServer(server.NewPetStoreServer(api))
@@ -35,11 +37,11 @@ func TestPetStore(t *testing.T) {
 
 	pet, err := api.CreatePet(context.TODO(), &client.Pet{Name: "Daisy"})
 	assert.NoError(t, err)
-	assert.NotNil(t, pet)
+	require.NotNil(t, pet)
 
 	_, err = api.GetPet(context.TODO(), pet.ID)
 	assert.NoError(t, err)
-	assert.NotNil(t, pet)
+	require.NotNil(t, pet)
 
 	pets, err = api.ListPets(context.TODO())
 	assert.NoError(t, err)

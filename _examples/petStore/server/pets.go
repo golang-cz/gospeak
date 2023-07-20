@@ -2,9 +2,11 @@ package server
 
 import (
 	"context"
+
+	"github.com/golang-cz/gospeak/_examples/petStore/proto"
 )
 
-func (s *API) GetPet(ctx context.Context, ID int64) (pet *Pet, err error) {
+func (s *API) GetPet(ctx context.Context, ID int64) (pet *proto.Pet, err error) {
 	pet, ok := s.PetStore[ID]
 	if !ok {
 		return nil, ErrorNotFound("pet(%v) not found", ID)
@@ -12,8 +14,8 @@ func (s *API) GetPet(ctx context.Context, ID int64) (pet *Pet, err error) {
 	return pet, nil
 }
 
-func (s *API) ListPets(ctx context.Context) (pets []*Pet, err error) {
-	pets = make([]*Pet, 0, len(s.PetStore))
+func (s *API) ListPets(ctx context.Context) (pets []*proto.Pet, err error) {
+	pets = make([]*proto.Pet, 0, len(s.PetStore))
 	for _, pet := range s.PetStore {
 		pets = append(pets, pet)
 	}
@@ -21,7 +23,7 @@ func (s *API) ListPets(ctx context.Context) (pets []*Pet, err error) {
 	return pets, nil
 }
 
-func (s *API) CreatePet(ctx context.Context, pet *Pet) (*Pet, error) {
+func (s *API) CreatePet(ctx context.Context, pet *proto.Pet) (*proto.Pet, error) {
 	if pet == nil {
 		return nil, ErrorInvalidArgument("pet", "pet is required")
 	}
@@ -36,7 +38,7 @@ func (s *API) CreatePet(ctx context.Context, pet *Pet) (*Pet, error) {
 	return pet, nil
 }
 
-func (s *API) UpdatePet(ctx context.Context, ID int64, pet *Pet) (*Pet, error) {
+func (s *API) UpdatePet(ctx context.Context, ID int64, pet *proto.Pet) (*proto.Pet, error) {
 	if pet == nil {
 		return nil, ErrorInvalidArgument("pet", "pet is required")
 	}
