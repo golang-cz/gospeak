@@ -51,6 +51,17 @@ func Parse(filePath string) ([]*Target, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to load Go packages from %q", path)
 	}
+
+	for _, pkg := range pkgs {
+		for _, pkgErr := range pkg.Errors {
+			fmt.Fprintln(os.Stderr, pkgErr)
+		}
+
+		for _, typeErr := range pkg.TypeErrors {
+			fmt.Fprintln(os.Stderr, typeErr)
+		}
+	}
+
 	if len(pkgs) != 1 {
 		return nil, errors.Errorf("failed to load Go package (len=%v) from %q", len(pkgs), path)
 	}
