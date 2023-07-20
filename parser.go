@@ -52,6 +52,7 @@ func Parse(filePath string) ([]*Target, error) {
 		return nil, errors.Wrapf(err, "failed to load Go packages from %q", path)
 	}
 
+	// Print all errors.
 	for _, pkg := range pkgs {
 		for _, pkgErr := range pkg.Errors {
 			fmt.Fprintln(os.Stderr, pkgErr)
@@ -66,6 +67,10 @@ func Parse(filePath string) ([]*Target, error) {
 		return nil, errors.Errorf("failed to load Go package (len=%v) from %q", len(pkgs), path)
 	}
 	pkg := pkgs[0]
+
+	if len(pkg.Errors) > 0 || len(pkg.TypeErrors) > 0 {
+		return nil, fmt.Errorf("%v errors", len(pkg.Errors)+len(pkg.TypeErrors))
+	}
 
 	// Collect Go interfaces with `//go:webrpc` comments.
 	targets, err := collectInterfaces(pkg)
