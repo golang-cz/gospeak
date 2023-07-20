@@ -84,6 +84,7 @@ func (p *parser) getMethodArguments(params *types.Tuple, isInput bool) ([]*schem
 
 		name := param.Name()
 		if name == "" {
+			// TODO: Name the field based on field type? (strings []string, hub *Hub)
 			if isInput {
 				name = fmt.Sprintf("arg%v", i) // 0 is `ctx context.Context`
 			} else {
