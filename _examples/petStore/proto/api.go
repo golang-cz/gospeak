@@ -8,12 +8,11 @@ import (
 )
 
 //go:webrpc json -out=./petstore.gen.json
-//go:webrpc /Users/vojtechvitek/webrpc/gen-golang -server -importTypesFrom=github.com/golang-cz/gospeak/_examples/petStore/proto -legacyErrors=true -pkg=server -out=./server/server.gen.go
-//go:xxx /Users/vojtechvitek/webrpc/gen-golang -server -legacyErrors=true -pkg=server -out=./server/server.gen.go
-//go:webrpc /Users/vojtechvitek/webrpc/gen-golang -client -pkg=client -out=./client/petstore.gen.go
-//go:xxx typescript -client -out=./petstore.gen.ts
-//go:xxx json -out=./petstore.gen.json
-//go:xxx openapi -out=./petstore.gen.yaml
+//go:webrpc golang -server -pkg=server -json=jsoniter -importTypesFrom=github.com/golang-cz/gospeak/_examples/petStore/proto -legacyErrors=true -out=./server/server.gen.go
+//go:webrpc golang -client -pkg=client -json=jsoniter -out=./client/petstore.gen.go
+//go:webrpc typescript -client -out=./petstore.gen.ts
+//go:webrpc json -out=./petstore.gen.json
+//go:webrpc openapi -out=./petstore.gen.yaml
 type PetStore interface {
 	GetPet(ctx context.Context, ID int64) (pet *Pet, err error)
 	ListPets(ctx context.Context) (pets []*Pet, err error)
