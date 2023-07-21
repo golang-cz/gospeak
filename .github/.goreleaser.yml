@@ -50,7 +50,7 @@ release:
 
 brews:
   - name: gospeak
-    tap:
+    repository:
       owner: golang-cz
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
