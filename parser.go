@@ -89,9 +89,9 @@ func Parse(filePath string) ([]*Target, error) {
 			schema: &schema.WebRPCSchema{
 				WebrpcVersion: "v1",
 				SchemaName:    target.InterfaceName,
-				SchemaVersion: "",
+				SchemaVersion: "vTODO",
 			},
-			schemaPkgName:   pkg.Types.Path(),
+			schemaPkgName:   pkg.PkgPath,
 			parsedTypes:     map[types.Type]*schema.VarType{},
 			parsedTypeNames: map[string]struct{}{},
 

@@ -51,23 +51,23 @@ func TestStructFieldJsonTags(t *testing.T) {
 		},
 		{
 			in:  "ID int64 `json:\"renamed_id\"`", // renamed in JSON
-			out: &field{name: "renamed_id", expr: "int64", t: schema.T_Int64, jsonTag: "renamed_id", goName: "ID", goType: "int64"},
+			out: &field{name: "renamed_id", expr: "int64", t: schema.T_Int64, goName: "ID", goType: "int64", jsonTag: "renamed_id"},
 		},
 		{
 			in:  "ID int64 `json:\",string\"`", // string type in JSON
-			out: &field{name: "ID", expr: "string", t: schema.T_String, jsonTag: ",string", goName: "ID", goType: "int64"},
+			out: &field{name: "ID", expr: "string", t: schema.T_String, goName: "ID", goType: "int64", jsonTag: ",string"},
 		},
 		{
 			in:  "ID int64 `json:\"id,string\"`", // string type in JSON
-			out: &field{name: "id", expr: "string", t: schema.T_String, jsonTag: "id,string", goName: "ID", goType: "int64"},
+			out: &field{name: "id", expr: "string", t: schema.T_String, goName: "ID", goType: "int64", jsonTag: "id,string"},
 		},
 		{
 			in:  "ID int64 `json:\",omitempty\"`", // optional in JSON
-			out: &field{name: "ID", expr: "int64", t: schema.T_Int64, jsonTag: ",omitempty", goName: "ID", goType: "int64", optional: true},
+			out: &field{name: "ID", expr: "int64", t: schema.T_Int64, goName: "ID", goType: "int64", jsonTag: ",omitempty", optional: true},
 		},
 		{
 			in:  "ID int64 `json:\"id,string,omitempty\"`", // optional string type in JSON
-			out: &field{name: "id", expr: "string", t: schema.T_String, jsonTag: "id,string,omitempty", goName: "ID", goType: "int64", optional: true},
+			out: &field{name: "id", expr: "string", t: schema.T_String, goName: "ID", goType: "int64", jsonTag: "id,string,omitempty", optional: true},
 		},
 		{
 			in:  "CreatedAt time.Time",
@@ -76,6 +76,18 @@ func TestStructFieldJsonTags(t *testing.T) {
 		{
 			in:  "DeletedAt *time.Time",
 			out: &field{name: "DeletedAt", expr: "timestamp", t: schema.T_Timestamp, goName: "DeletedAt", goType: "*time.Time", optional: true},
+		},
+		{
+			in:  "Number Number",
+			out: &field{name: "Number", expr: "int", t: schema.T_Int, goName: "Number", goType: "Number"},
+		},
+		{
+			in:  "NumberString Number `json:\",string\"`",
+			out: &field{name: "NumberString", expr: "string", t: schema.T_String, goName: "NumberString", goType: "Number", jsonTag: ",string"},
+		},
+		{
+			in:  "LocaleString Locale",
+			out: &field{name: "LocaleString", expr: "string", t: schema.T_String, goName: "LocaleString", goType: "Locale"},
 		},
 		{
 			in:  "ID uuid.UUID", // uuid implements encoding.TextMarshaler interface, expect string in JSON
@@ -202,10 +214,25 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		TestStruct(ctx context.Context) (tst *TestStruct, err error)
 	}
 
+	type Number int // number over JSON
+
+	type Locale int // implements MarshalText(), should be string over JSON
+
+	// MarshalText implements encoding.TextMarshaler.
+	func (locale Locale) MarshalText() ([]byte, error) {
+		return []byte{}, nil
+	}
+
+	// UnmarshalText implements encoding.TextUnmarshaler.
+	func (locale *Locale) UnmarshalText(data []byte) error {
+		return nil
+	}
 
 	// Ensure all the imports are used.
-	var _ uuid.UUID
 	var _ time.Time
+	var _ uuid.UUID
+	var _ Number
+	var _ Locale
 	`, inputFields)
 
 	wd, err := os.Getwd()
@@ -279,9 +306,9 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		schema: &schema.WebRPCSchema{
 			WebrpcVersion: "v1",
 			SchemaName:    "TestAPI",
-			SchemaVersion: "",
+			SchemaVersion: "v0.0.1",
 		},
-		schemaPkgName:   pkg.Name,
+		schemaPkgName:   pkg.PkgPath,
 		parsedTypes:     map[types.Type]*schema.VarType{},
 		parsedTypeNames: map[string]struct{}{},
 
