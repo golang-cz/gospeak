@@ -4,26 +4,17 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/webrpc/webrpc/schema"
 )
 
 func TestStructFieldEnum(t *testing.T) {
 	t.Parallel()
 
-	type enum struct {
-		name     string
-		expr     string
-		t        schema.CoreType
-		jsonTag  string
-		goName   string
-		goType   string
-		goImport string
-		optional bool
-	}
-
 	tt := []struct {
 		in  string
-		out *enum
+		t   schema.CoreType
+		out []*schema.TypeField
 	}{
 		{
 			in: `
@@ -33,58 +24,18 @@ func TestStructFieldEnum(t *testing.T) {
 				// new      = 3
 				type Status gospeak.Enum[int]
 			`,
-			out: &enum{name: "Status", expr: "Status", t: schema.T_Struct, goName: "Status", goType: "Status"},
+			t: schema.T_Int,
+			out: []*schema.TypeField{
+				// TODO: webrpc name/value looks to be reversed
+				&schema.TypeField{Name: "0", TypeExtra: schema.TypeExtra{Value: "approved"}},
+				&schema.TypeField{Name: "1", TypeExtra: schema.TypeExtra{Value: "pending"}},
+				&schema.TypeField{Name: "2", TypeExtra: schema.TypeExtra{Value: "closed"}},
+				&schema.TypeField{Name: "3", TypeExtra: schema.TypeExtra{Value: "new"}},
+			},
 		},
 	}
 
 	for _, tc := range tt {
-		var fields []*schema.TypeField
-		if tc.out != nil {
-			fields = []*schema.TypeField{
-				&schema.TypeField{
-					Name: tc.out.name,
-					Type: &schema.VarType{
-						Expr: tc.out.expr,
-						Type: tc.out.t,
-						Struct: &schema.VarStructType{
-							Name: tc.out.name,
-							Type: &schema.Type{
-								Kind: schema.TypeKind_Enum,
-								Name: tc.out.name,
-								Type: &schema.VarType{
-									Expr: "int",
-									Type: schema.T_Int,
-								},
-								Fields: []*schema.TypeField{
-									// 0 = approved
-									// 1 = pending
-									// 2 = closed
-									// 3 = new
-									&schema.TypeField{Name: "approved", TypeExtra: schema.TypeExtra{Value: "0"}},
-									&schema.TypeField{Name: "pending", TypeExtra: schema.TypeExtra{Value: "1"}},
-									&schema.TypeField{Name: "closed", TypeExtra: schema.TypeExtra{Value: "2"}},
-									&schema.TypeField{Name: "new", TypeExtra: schema.TypeExtra{Value: "3"}},
-								},
-							},
-						},
-					},
-					TypeExtra: schema.TypeExtra{
-						Optional: tc.out.optional,
-						Meta: []schema.TypeFieldMeta{
-							{"go.field.name": tc.out.goName},
-							{"go.field.type": tc.out.goType},
-						},
-					},
-				},
-			}
-			if tc.out.goImport != "" {
-				fields[0].TypeExtra.Meta = append(fields[0].TypeExtra.Meta, schema.TypeFieldMeta{"go.type.import": tc.out.goImport})
-			}
-			if tc.out.jsonTag != "" {
-				fields[0].TypeExtra.Meta = append(fields[0].TypeExtra.Meta, schema.TypeFieldMeta{"go.tag.json": tc.out.jsonTag})
-			}
-		}
-
 		srcCode := fmt.Sprintf(`package test
 		
 			import (
@@ -101,12 +52,8 @@ func TestStructFieldEnum(t *testing.T) {
 			
 			//go:webrpc json -out=/dev/null
 			type TestAPI interface{
-				TestStruct(ctx context.Context) (tst *TestStruct, err error)
+				Test(ctx context.Context) (tst *TestStruct, err error)
 			}
-
-			// Ensure all the imports are used.
-			//var _ = gospeak.Enum[int]{}
-			//var _ = Status{}
 			`, tc.in)
 
 		p, err := testParser(srcCode)
@@ -117,5 +64,27 @@ func TestStructFieldEnum(t *testing.T) {
 		if err := p.CollectEnums(); err != nil {
 			t.Fatalf("collecting enums: %v", err)
 		}
+
+		want := &schema.Type{
+			Kind: schema.TypeKind_Enum,
+			Name: "Status",
+			Type: &schema.VarType{
+				Expr: tc.t.String(),
+				Type: tc.t,
+			},
+			Fields: tc.out,
+		}
+
+		var got *schema.Type
+		for _, schemaType := range p.Schema.Types {
+			if schemaType.Name == "Status" {
+				got = schemaType
+			}
+		}
+
+		if !cmp.Equal(want, got) {
+			t.Errorf("%s\n%s\n", tc.in, coloredDiff(want, got))
+		}
+
 	}
 }

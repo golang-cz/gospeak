@@ -33,7 +33,7 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 	
 	//go:webrpc json -out=/dev/null
 	type TestAPI interface{
-		TestStruct(ctx context.Context) (tst *TestStruct, err error)
+		Test(ctx context.Context) (tst *TestStruct, err error)
 	}
 
 	type Number int // should be number over JSON
