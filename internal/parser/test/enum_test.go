@@ -33,6 +33,23 @@ func TestStructFieldEnum(t *testing.T) {
 				&schema.TypeField{Name: "3", TypeExtra: schema.TypeExtra{Value: "new"}},
 			},
 		},
+		{
+			in: `
+				// approved
+				// pending
+				// closed
+				// new
+				type Status gospeak.Enum[uint64]
+			`,
+			t: schema.T_Uint64,
+			out: []*schema.TypeField{
+				// TODO: webrpc name/value looks to be reversed
+				&schema.TypeField{Name: "0", TypeExtra: schema.TypeExtra{Value: "approved"}},
+				&schema.TypeField{Name: "1", TypeExtra: schema.TypeExtra{Value: "pending"}},
+				&schema.TypeField{Name: "2", TypeExtra: schema.TypeExtra{Value: "closed"}},
+				&schema.TypeField{Name: "3", TypeExtra: schema.TypeExtra{Value: "new"}},
+			},
+		},
 	}
 
 	for _, tc := range tt {
