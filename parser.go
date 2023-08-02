@@ -38,12 +38,8 @@ func Parse(filePath string) ([]*Target, error) {
 	}
 
 	cfg := &packages.Config{
-		Dir: path,
-		Mode: packages.NeedName | packages.NeedModule |
-			packages.NeedImports | packages.NeedDeps |
-			packages.NeedTypes | packages.NeedTypesInfo |
-			packages.NeedFiles | packages.NeedCompiledGoFiles |
-			packages.NeedSyntax | packages.LoadSyntax,
+		Dir:  path,
+		Mode: packages.NeedName | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo | packages.NeedImports,
 	}
 
 	pkgs, err := packages.Load(cfg, path)

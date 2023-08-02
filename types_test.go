@@ -10,7 +10,6 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/google/go-cmp/cmp"
-
 	"github.com/webrpc/webrpc/schema"
 	"golang.org/x/tools/go/packages"
 )
@@ -311,11 +310,11 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		return nil
 	}
 
-	// 0 = approved
-	// 1 = pending
-	// 2 = closed
-	// 3 = new
-	type Status Enum
+	// approved = 0
+	// pending  = 1
+	// closed   = 2
+	// new      = 3
+	type Status = Enum[int]
 
 	// Ensure all the imports are used.
 	var _ time.Time
@@ -336,7 +335,7 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 
 	cfg := &packages.Config{
 		Dir:  wd,
-		Mode: packages.NeedName | packages.NeedSyntax | packages.NeedTypes | packages.NeedImports,
+		Mode: packages.NeedName | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo | packages.NeedImports,
 		Overlay: map[string][]byte{
 			package1Path: []byte(srcCode),
 			package2Path: []byte(`
@@ -415,16 +414,19 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		t.Fatal(inputFields, fmt.Errorf("failed to parse struct TestStruct: %w", err))
 	}
 
-	if len(p.schema.Types) != 1 {
-		t.Fatalf("%s\nexpected one struct type, got %+v", inputFields, p.schema.Types)
+	for _, got := range p.schema.Types {
+		if got.Name != "TestStruct" {
+			continue
+		}
+
+		if !cmp.Equal(want, got) {
+			t.Errorf("%s\n%s\n", inputFields, coloredDiff(want, got))
+		}
+
+		return // success
 	}
 
-	got := p.schema.Types[0]
-
-	if !cmp.Equal(want, got) {
-		t.Errorf("%s\n%s\n", inputFields, coloredDiff(want, got))
-	}
-
+	t.Fatalf("%s\nexpected one struct type, got %s", inputFields, spew.Sdump(p.schema.Types))
 	return
 }
 

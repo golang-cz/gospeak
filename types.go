@@ -46,24 +46,26 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 	case *types.Named:
 		pkg := v.Obj().Pkg()
 		underlying := v.Underlying()
-		typeName := p.goTypeName(typ)
+
+		//typeName := p.goTypeName(typ)
+		typeName := p.goTypeName(v)
 
 		if pkg != nil {
-			if pkg.Path() == "time" && v.Obj().Id() == "Time" {
+			if pkg.Path() == "time" && typeName == "Time" {
 				return &schema.VarType{
 					Expr: "timestamp",
 					Type: schema.T_Timestamp,
 				}, nil
 			}
 
-			if pkg.Path() == "github.com/golang-cz/gospeak" && v.Obj().Id() == "Status" {
-				// TODO: If underlying type is gospeak.Enum
+			underlying := v.Underlying()
+			underlyingTypeName := p.goTypeName(underlying)
+
+			if pkg.Path() == "github.com/golang-cz/gospeak" && strings.HasPrefix(typeName, "Enum[") && strings.HasSuffix(typeName, "]") {
 
 				name := v.Obj().Id()
-				underlying := v.Underlying()
 
-				underlyingTypeName := p.goTypeName(underlying)
-				enumElemType, err := p.parseNamedType(underlyingTypeName, v.Underlying())
+				enumElemType, err := p.parseNamedType(underlyingTypeName, underlying)
 				if err != nil {
 					return nil, fmt.Errorf("parsing gospeak.Enum underlying type: %w", err)
 				}
@@ -82,7 +84,7 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 											if doc != nil {
 												for i, comment := range doc.List {
 													commentValue, _ := strings.CutPrefix(comment.Text, "//")
-													value, name, found := strings.Cut(commentValue, "=") // 0 = approved
+													name, value, found := strings.Cut(commentValue, "=") // approved = 0
 													if !found {                                          // approved
 														value = fmt.Sprintf("%v", i)
 														name = commentValue
@@ -112,7 +114,6 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 				}
 
 				p.schema.Types = append(p.schema.Types, enumType)
-
 				return &schema.VarType{
 					Expr: name,
 					Type: schema.T_Struct, // webrpc TODO: should be schema.T_Enum
@@ -215,7 +216,7 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 		return p.parseSlice(typeName, v)
 
 	case *types.Interface:
-		return p.parseInterface(typeName, v)
+		return p.parseAny(typeName, v)
 
 	case *types.Map:
 		return p.parseMap(typeName, v)
@@ -448,7 +449,7 @@ func (p *parser) parseSlice(typeName string, sliceTyp *types.Slice) (*schema.Var
 	return varType, nil
 }
 
-func (p *parser) parseInterface(typeName string, iface *types.Interface) (*schema.VarType, error) {
+func (p *parser) parseAny(typeName string, iface *types.Interface) (*schema.VarType, error) {
 	varType := &schema.VarType{
 		Expr: "any",
 		Type: schema.T_Any,
