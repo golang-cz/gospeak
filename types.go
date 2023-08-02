@@ -63,7 +63,7 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 				underlying := v.Underlying()
 
 				underlyingTypeName := p.goTypeName(underlying)
-				enumType, err := p.parseNamedType(underlyingTypeName, v.Underlying())
+				enumElemType, err := p.parseNamedType(underlyingTypeName, v.Underlying())
 				if err != nil {
 					return nil, fmt.Errorf("parsing gospeak.Enum underlying type: %w", err)
 				}
@@ -104,17 +104,21 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 					}
 				}
 
+				enumType := &schema.Type{
+					Kind:   schema.TypeKind_Enum,
+					Name:   name,
+					Type:   enumElemType,
+					Fields: enumValues, // webrpc TODO: should be Enums
+				}
+
+				p.schema.Types = append(p.schema.Types, enumType)
+
 				return &schema.VarType{
 					Expr: name,
 					Type: schema.T_Struct, // webrpc TODO: should be schema.T_Enum
 					Struct: &schema.VarStructType{ // webrpc TODO: should be EnumType{}
 						Name: name,
-						Type: &schema.Type{
-							Kind:   schema.TypeKind_Enum,
-							Name:   name,
-							Type:   enumType,
-							Fields: enumValues, // webrpc TODO: should be Enums
-						},
+						Type: enumType,
 					},
 				}, nil
 			}
@@ -284,7 +288,7 @@ func (p *parser) parseBasic(typ *types.Basic) (*schema.VarType, error) {
 }
 
 func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (*schema.VarType, error) {
-	msg := &schema.Type{
+	structType := &schema.Type{
 		Kind: "struct",
 		Name: typeName,
 	}
@@ -304,7 +308,7 @@ func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (*schema.
 
 			if varType.Type == schema.T_Struct {
 				for _, embeddedField := range varType.Struct.Type.Fields {
-					msg.Fields = appendOrOverrideExistingField(msg.Fields, embeddedField)
+					structType.Fields = appendOrOverrideExistingField(structType.Fields, embeddedField)
 				}
 			}
 			continue
@@ -315,18 +319,18 @@ func (p *parser) parseStruct(typeName string, structTyp *types.Struct) (*schema.
 			return nil, fmt.Errorf("parsing struct field %v: %w", i, err)
 		}
 		if field != nil {
-			msg.Fields = appendOrOverrideExistingField(msg.Fields, field)
+			structType.Fields = appendOrOverrideExistingField(structType.Fields, field)
 		}
 	}
 
-	p.schema.Types = append(p.schema.Types, msg)
+	p.schema.Types = append(p.schema.Types, structType)
 
 	return &schema.VarType{
 		Expr: typeName,
 		Type: schema.T_Struct,
 		Struct: &schema.VarStructType{
 			Name: typeName,
-			Type: msg,
+			Type: structType,
 		},
 	}, nil
 }
