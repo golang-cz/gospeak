@@ -137,6 +137,89 @@ func TestStructFieldJsonTags(t *testing.T) {
 	}
 }
 
+func TestStructFieldEnum(t *testing.T) {
+	t.Parallel()
+
+	type field struct {
+		name     string
+		expr     string
+		t        schema.CoreType
+		jsonTag  string
+		goName   string
+		goType   string
+		goImport string
+		optional bool
+	}
+
+	tt := []struct {
+		in  string
+		out *field
+	}{
+		{
+			in:  "Status Status", // enum.Status
+			out: &field{name: "Status", expr: "Status", t: schema.T_Struct, goName: "Status", goType: "Status"},
+		},
+	}
+
+	for _, tc := range tt {
+		var fields []*schema.TypeField
+		if tc.out != nil {
+			fields = []*schema.TypeField{
+				&schema.TypeField{
+					Name: tc.out.name,
+					Type: &schema.VarType{
+						Expr: tc.out.expr,
+						Type: tc.out.t,
+						Struct: &schema.VarStructType{
+							Name: tc.out.name,
+							Type: &schema.Type{
+								Kind: schema.TypeKind_Enum,
+								Name: tc.out.name,
+								Type: &schema.VarType{
+									Expr: "int",
+									Type: schema.T_Int,
+								},
+								Fields: []*schema.TypeField{
+									// 0 = approved
+									// 1 = pending
+									// 2 = closed
+									// 3 = new
+									&schema.TypeField{Name: "approved", TypeExtra: schema.TypeExtra{Value: "0"}},
+									&schema.TypeField{Name: "pending", TypeExtra: schema.TypeExtra{Value: "1"}},
+									&schema.TypeField{Name: "closed", TypeExtra: schema.TypeExtra{Value: "2"}},
+									&schema.TypeField{Name: "new", TypeExtra: schema.TypeExtra{Value: "3"}},
+								},
+							},
+						},
+					},
+					TypeExtra: schema.TypeExtra{
+						Optional: tc.out.optional,
+						Meta: []schema.TypeFieldMeta{
+							{"go.field.name": tc.out.goName},
+							{"go.field.type": tc.out.goType},
+						},
+					},
+				},
+			}
+			if tc.out.goImport != "" {
+				fields[0].TypeExtra.Meta = append(fields[0].TypeExtra.Meta, schema.TypeFieldMeta{"go.type.import": tc.out.goImport})
+			}
+			if tc.out.jsonTag != "" {
+				fields[0].TypeExtra.Meta = append(fields[0].TypeExtra.Meta, schema.TypeFieldMeta{"go.tag.json": tc.out.jsonTag})
+			}
+		}
+
+		testStruct(t,
+			tc.in,
+			&schema.Type{
+				Kind:   "struct",
+				Name:   "TestStruct",
+				Fields: fields,
+			},
+		)
+	}
+}
+
 func TestStructSliceField(t *testing.T) {
 	t.Parallel()
 
@@ -214,7 +297,7 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		TestStruct(ctx context.Context) (tst *TestStruct, err error)
 	}
 
-	type Number int // number over JSON
+	type Number int // should be number over JSON
 
 	type Locale int // implements MarshalText(), should be string over JSON
 
@@ -228,11 +311,18 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		return nil
 	}
 
+	// 0 = approved
+	// 1 = pending
+	// 2 = closed
+	// 3 = new
+	type Status Enum
+
 	// Ensure all the imports are used.
 	var _ time.Time
 	var _ uuid.UUID
 	var _ Number
 	var _ Locale
+	var _ Status
 	`, inputFields)
 
 	wd, err := os.Getwd()
@@ -246,7 +336,7 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 
 	cfg := &packages.Config{
 		Dir:  wd,
-		Mode: packages.NeedName | packages.NeedSyntax | packages.NeedTypes | packages.LoadImports,
+		Mode: packages.NeedName | packages.NeedSyntax | packages.NeedTypes | packages.NeedImports,
 		Overlay: map[string][]byte{
 			package1Path: []byte(srcCode),
 			package2Path: []byte(`
@@ -311,6 +401,7 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		schemaPkgName:   pkg.PkgPath,
 		parsedTypes:     map[types.Type]*schema.VarType{},
 		parsedTypeNames: map[string]struct{}{},
+		pkg:             pkg,
 
 		// TODO: Change this to map[*types.Package]string so we can rename duplicated pkgs?
 		importedPaths: map[string]struct{}{

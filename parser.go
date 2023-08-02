@@ -94,6 +94,7 @@ func Parse(filePath string) ([]*Target, error) {
 			schemaPkgName:   pkg.PkgPath,
 			parsedTypes:     map[types.Type]*schema.VarType{},
 			parsedTypeNames: map[string]struct{}{},
+			pkg:             pkg,
 
 			// TODO: Change this to map[*types.Package]string so we can rename duplicated pkgs?
 			importedPaths: map[string]struct{}{
@@ -206,4 +207,6 @@ type parser struct {
 	importedPaths map[string]struct{}
 
 	schemaPkgName string // Schema file's package name.
+
+	pkg *packages.Package
 }
