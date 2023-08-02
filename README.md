@@ -1,10 +1,11 @@
-# GoSpeak - Go `interface{}` as your API <!-- omit in toc -->
+# GoSpeak - Generate REST APIs from Go code <!-- omit in toc -->
 
-**NOTICE: Under development. Seeking early user feedback.**
+***NOTICE:** Under development. Seeking early user feedback.*
 
 GoSpeak is a simple RPC framework, a lightweight alternative to [gRPC](https://grpc.io/) and [Twirp](https://twitchtv.github.io/twirp/docs/intro.html), where Go code is your protobuf.
 
 ```go
+//go:generate github.com/golang-cz/gospeak/cmd/gospeak ./
 package proto
 
 //go:webrpc golang -server -pkg=server -out=./server/server.gen.go
@@ -14,29 +15,39 @@ type ExampleAPI interface {
 }
 ```
 
-GoSpeak generates client/server code via [webrpc-gen](https://github.com/webrpc/webrpc) tool, which renders code from Go templates. The REST API routes and JSON payload are defined per [webrpc](https://github.com/webrpc/webrpc) specs and can be exported as OpenAPI 3.x (Swagger) API documentation.
+Usage:
 
-| Server | | Client  |
-|---|---|---|
-| Go | <=> | [Go](https://github.com/webrpc/gen-golang) |
-| Go | <=> | [TypeScript](https://github.com/webrpc/gen-typescript) |
-| Go | <=> | [JavaScript](https://github.com/webrpc/gen-javascript) |
-| Go | <=> | [Swagger codegen generators](https://github.com/webrpc/gen-openapi#generate-clientdocs-via-openapi-generator)|
+```
+$ go get github.com/golang-cz/gospeak/cmd/gospeak@latest
+$ go generate
+            ExampleAPI => ./server/server.gen.go ✓
+            ExampleAPI => ./client/example.gen.go ✓
+```
 
+## Language support <!-- omit in toc -->
+
+GoSpeak uses [webrpc-gen](https://github.com/webrpc/webrpc) tool to generate REST API client & server code using Go templates. The API routes and JSON payload are defined per [webrpc](https://github.com/webrpc/webrpc) specs and can be exported to OpenAPI 3.x (Swagger) documentation.
+
+| Server   | | Client                                                                                                               |
+|----------|---|----------------------------------------------------------------------------------------------------------------------|
+| Go 1.20+ | <=> | [Go 1.17+](https://github.com/webrpc/gen-golang)                                                                     |
+| Go 1.20+ | <=> | [TypeScript](https://github.com/webrpc/gen-typescript)                                                               |
+| Go 1.20+ | <=> | [JavaScript (ES6)](https://github.com/webrpc/gen-javascript)                                                         |
+| Go 1.20+ | <=> | [OpenAPI 3+](https://github.com/webrpc/gen-openapi) (Swagger documentation)                                     |
+| Go 1.20+ | <=> | Any OpenAPI client [code generator](https://github.com/webrpc/gen-openapi#generate-clientdocs-via-openapi-generator) |
 
 # Quick example <!-- omit in toc -->
 
-- [1. Write a Go interface](#1-write-a-go-interface)
-- [2. Add webrpc targets](#2-add-webrpc-targets)
+- [1. Define service API](#1-define-service-api)
+- [2. Add target language directives](#2-add-target-language-directives)
 - [3. Generate code](#3-generate-code)
-- [4. Mount and serve the API server](#4-mount-and-serve-the-api-server)
+- [4. Mount the API server](#4-mount-the-api-server)
 - [5. Implement the server business logic](#5-implement-the-server-business-logic)
 - [6. Use the generated client](#6-use-the-generated-client)
+- [7. Test your API](#7-test-your-api)
 
 
-## 1. Write a Go interface
-
-This is your service definition (think of it as of `protobuf` file).
+## 1. Define service API
 
 ```go
 package proto
@@ -65,23 +76,17 @@ type Tag struct {
 }
 ```
 
-## 2. Add webrpc targets
+## 2. Add target language directives
 
-Generate Go server and Go client:
+Generate Go server and Go client code with `go:webrpc` directives:
 
 ```diff
 +//go:webrpc golang -server -pkg=server -out=./server/server.gen.go
 +//go:webrpc golang -client -pkg=client -out=./client/example.gen.go
  type PetStore interface {
- 	GetPet(ctx context.Context, ID int64) (pet *Pet, err error)
- 	ListPets(ctx context.Context) (pets []*Pet, err error)
- 	CreatePet(ctx context.Context, new *Pet) (pet *Pet, err error)
- 	UpdatePet(ctx context.Context, ID int64, update *Pet) (pet *Pet, err error)
- 	DeletePet(ctx context.Context, ID int64) error
- }
 ```
 
-Generate TypeScript client and OpenAPI 3.x (Swagger) docs too:
+Generate TypeScript client and OpenAPI 3.x (Swagger) documentation:
 
 ```diff
  //go:webrpc golang -server -pkg=server -out=./server/server.gen.go
@@ -89,12 +94,6 @@ Generate TypeScript client and OpenAPI 3.x (Swagger) docs too:
 +//go:webrpc typescript -client -out=./client/exampleClient.gen.ts
 +//go:webrpc openapi -out=./docs/exampleApi.gen.yaml -title=PetStoreAPI
  type PetStore interface {
- 	GetPet(ctx context.Context, ID int64) (pet *Pet, err error)
- 	ListPets(ctx context.Context) (pets []*Pet, err error)
- 	CreatePet(ctx context.Context, new *Pet) (pet *Pet, err error)
- 	UpdatePet(ctx context.Context, ID int64, update *Pet) (pet *Pet, err error)
- 	DeletePet(ctx context.Context, ID int64) error
- }
 ```
 
 ## 3. Generate code
@@ -109,7 +108,9 @@ $ gospeak ./proto/api.go
             PetStore => ./client/videoDashboardClient.gen.ts ✓
 ```
 
-## 4. Mount and serve the API server
+*NOTE: Alternatively, you can `go get github.com/golang-cz/gospeak` as your dependency and run `go generate` against `//go:generate github.com/golang-cz/gospeak/cmd/gospeak .` directive.*
+
+## 4. Mount the API server
 
 ```go
 // cmd/petstore/main.go
@@ -127,28 +128,26 @@ func main() {
 
 ## 5. Implement the server business logic
 
-The generated server code
-- Handles incoming REST API requests
-- Unmarshals JSON request into method argument(s)
-- Calls your RPC method, ie. server.GetPet(ctx, petID) (*Pet, error)
-- Marshals return argument(s) into JSON response
+The generated server code already
+- handles incoming REST API requests
+- unmarshals JSON request into method argument(s)
+- calls your RPC method implementation, ie. `server.GetPet(ctx, 1)``
+- marshals return argument(s) into a JSON response
 
 What's left is the business logic. Implement the interface methods:
 
 ```go
-// server/server.go
-package server
+// rpc/server.go
+package rpc
 
-// Implements PetStore interface{}.
 type Server struct {
 	/* DB connection, config etc. */
 }
-
 ```
 
 ```go
-// server/user.go
-package server
+// rpc/user.go
+package rpc
 
 func (s *Server) GetUser(ctx context.Context, uid string) (user *User, err error) {
 	user, err := s.DB.GetUser(ctx, uid)
@@ -173,7 +172,7 @@ package main
 import "./client"
 
 func main() {
-	api := client.NewPetStoreClient(*serverUrl, &http.Client{})
+	api := client.NewPetStoreClient("http://localhost:8080", http.DefaultClient)
 
 	pets, err := api.ListPets(ctx)
 	if err != nil {
@@ -184,6 +183,27 @@ func main() {
 }
 ```
 
+## 7. Test your API
+
+```go
+package test
+
+import (
+	"testing"
+	"./client"
+)
+
+func TestAPI(t *testing.T){
+	api := client.NewPetStoreClient("http://localhost:8080", http.DefaultClient)
+
+	pets, err := api.ListPets(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(pets)
+}
+```
 
 ## Enjoy! <!-- omit in toc -->
 
