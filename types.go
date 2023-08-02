@@ -17,6 +17,58 @@ func (p *parser) parseType(typ types.Type) (*schema.VarType, error) {
 	return p.parseNamedType("", typ)
 }
 
+func (p *parser) collectEnums() error {
+	enumValues := []*schema.TypeField{}
+	for _, file := range p.pkg.Syntax {
+		for _, decl := range file.Decls {
+			if typeDeclaration, ok := decl.(*ast.GenDecl); ok && typeDeclaration.Tok == token.TYPE {
+				for _, spec := range typeDeclaration.Specs {
+					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
+						typeName := typeSpec.Name.Name
+						if typeName == "Enum" {
+							fmt.Println(typeDeclaration, typeSpec.Name.Obj, typeName, typeSpec.Type)
+							if indent, ok := typeSpec.Type.(*ast.Ident); ok {
+								typeName := indent.Name
+								//fmt.Println(typeName)
+								if typeName == "Enum" {
+									doc := typeDeclaration.Doc
+									if doc != nil {
+										for i, comment := range doc.List {
+											commentValue, _ := strings.CutPrefix(comment.Text, "//")
+											name, value, found := strings.Cut(commentValue, "=") // approved = 0
+											if !found {                                          // approved
+												value = fmt.Sprintf("%v", i)
+												name = commentValue
+											}
+											enumValues = append(enumValues, &schema.TypeField{
+												Name: strings.TrimSpace(name),
+												TypeExtra: schema.TypeExtra{
+													Value: strings.TrimSpace(value),
+												},
+											})
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//enumType := &schema.Type{
+	//	Kind:   schema.TypeKind_Enum,
+	//	Name:   name,
+	//	Type:   enumElemType,
+	//	Fields: enumValues, // webrpc TODO: should be Enums
+	//}
+	//
+	//p.schema.Types = append(p.schema.Types, enumType)
+
+	return nil
+}
+
 func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schema.VarType, err error) {
 	// Return a parsedType from cache, if exists.
 	if parsedType, ok := p.parsedTypes[typ]; ok {
@@ -47,82 +99,36 @@ func (p *parser) parseNamedType(typeName string, typ types.Type) (varType *schem
 		pkg := v.Obj().Pkg()
 		underlying := v.Underlying()
 
-		//typeName := p.goTypeName(typ)
-		typeName := p.goTypeName(v)
-
 		if pkg != nil {
-			if pkg.Path() == "time" && typeName == "Time" {
+			typeName := p.goTypeName(v)
+
+			if typeName == "time.Time" {
 				return &schema.VarType{
 					Expr: "timestamp",
 					Type: schema.T_Timestamp,
 				}, nil
 			}
 
-			underlying := v.Underlying()
-			underlyingTypeName := p.goTypeName(underlying)
+			//underlyingTypeName := p.goTypeName(underlying)
 
-			if pkg.Path() == "github.com/golang-cz/gospeak" && strings.HasPrefix(typeName, "Enum[") && strings.HasSuffix(typeName, "]") {
-
-				name := v.Obj().Id()
-
-				enumElemType, err := p.parseNamedType(underlyingTypeName, underlying)
-				if err != nil {
-					return nil, fmt.Errorf("parsing gospeak.Enum underlying type: %w", err)
-				}
-
-				enumValues := []*schema.TypeField{}
-				for _, file := range p.pkg.Syntax {
-					for _, decl := range file.Decls {
-						if typeDeclaration, ok := decl.(*ast.GenDecl); ok && typeDeclaration.Tok == token.TYPE {
-							for _, spec := range typeDeclaration.Specs {
-								if typeSpec, ok := spec.(*ast.TypeSpec); ok {
-									//typeName := typeSpec.Name.Name
-									if indent, ok := typeSpec.Type.(*ast.Ident); ok {
-										typeName := indent.Name
-										if typeName == "Enum" {
-											doc := typeDeclaration.Doc
-											if doc != nil {
-												for i, comment := range doc.List {
-													commentValue, _ := strings.CutPrefix(comment.Text, "//")
-													name, value, found := strings.Cut(commentValue, "=") // approved = 0
-													if !found {                                          // approved
-														value = fmt.Sprintf("%v", i)
-														name = commentValue
-													}
-													enumValues = append(enumValues, &schema.TypeField{
-														Name: strings.TrimSpace(name),
-														TypeExtra: schema.TypeExtra{
-															Value: strings.TrimSpace(value),
-														},
-													})
-												}
-											}
-										}
-									}
-
-								}
-							}
-						}
-					}
-				}
-
-				enumType := &schema.Type{
-					Kind:   schema.TypeKind_Enum,
-					Name:   name,
-					Type:   enumElemType,
-					Fields: enumValues, // webrpc TODO: should be Enums
-				}
-
-				p.schema.Types = append(p.schema.Types, enumType)
-				return &schema.VarType{
-					Expr: name,
-					Type: schema.T_Struct, // webrpc TODO: should be schema.T_Enum
-					Struct: &schema.VarStructType{ // webrpc TODO: should be EnumType{}
-						Name: name,
-						Type: enumType,
-					},
-				}, nil
-			}
+			//	if pkg.Path() == "github.com/golang-cz/gospeak" && strings.HasPrefix(typeName, "Enum[") && strings.HasSuffix(typeName, "]") {
+			//
+			//		name := v.Obj().Id()
+			//
+			//		enumElemType, err := p.parseNamedType(underlyingTypeName, underlying)
+			//		if err != nil {
+			//			return nil, fmt.Errorf("parsing gospeak.Enum underlying type: %w", err)
+			//		}
+			//
+			//		return &schema.VarType{
+			//			Expr: name,
+			//			Type: schema.T_Struct, // webrpc TODO: should be schema.T_Enum
+			//			Struct: &schema.VarStructType{ // webrpc TODO: should be EnumType{}
+			//				Name: name,
+			//				Type: enumType,
+			//			},
+			//		}, nil
+			//	}
 		}
 
 		// If the type implements encoding.TextMarshaler, it's a string.

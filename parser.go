@@ -99,9 +99,11 @@ func Parse(filePath string) ([]*Target, error) {
 			},
 		}
 
-		scope := pkg.Types.Scope()
+		if err := p.collectEnums(); err != nil {
+			return nil, fmt.Errorf("collecting enums: %w", err)
+		}
 
-		obj := scope.Lookup(target.InterfaceName)
+		obj := pkg.Types.Scope().Lookup(target.InterfaceName)
 		if obj == nil {
 			return nil, fmt.Errorf("type interface %v{} not found", target.InterfaceName)
 		}

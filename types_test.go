@@ -314,7 +314,7 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 	// pending  = 1
 	// closed   = 2
 	// new      = 3
-	type Status = Enum[int]
+	type Status Enum[int]
 
 	// Ensure all the imports are used.
 	var _ time.Time
@@ -407,6 +407,10 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 			// Initial schema file's package name artificially set by golang.org/x/tools/go/packages.
 			"command-line-arguments": {},
 		},
+	}
+
+	if err := p.collectEnums(); err != nil {
+		t.Fatal(inputFields, fmt.Errorf("collecting enums: %w", err))
 	}
 
 	_, err = p.parseStruct("TestStruct", testStruct)
