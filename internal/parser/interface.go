@@ -1,4 +1,4 @@
-package gospeak
+package parser
 
 import (
 	"fmt"
@@ -7,10 +7,10 @@ import (
 	"github.com/webrpc/webrpc/schema"
 )
 
-func (p *parser) parseInterfaceMethods(iface *types.Interface, name string) error {
+func (p *Parser) ParseInterfaceMethods(iface *types.Interface, name string) error {
 	service := &schema.Service{
 		Name:   name,
-		Schema: p.schema, // denormalize/back-reference
+		Schema: p.Schema, // denormalize/back-reference
 	}
 
 	// Loop over the interface's methods.
@@ -70,11 +70,11 @@ func (p *parser) parseInterfaceMethods(iface *types.Interface, name string) erro
 		return nil
 	}
 
-	p.schema.Services = append(p.schema.Services, service)
+	p.Schema.Services = append(p.Schema.Services, service)
 	return nil
 }
 
-func (p *parser) getMethodArguments(params *types.Tuple, isInput bool) ([]*schema.MethodArgument, error) {
+func (p *Parser) getMethodArguments(params *types.Tuple, isInput bool) ([]*schema.MethodArgument, error) {
 	var args []*schema.MethodArgument
 
 	for i := 0; i < params.Len(); i++ {
@@ -91,7 +91,7 @@ func (p *parser) getMethodArguments(params *types.Tuple, isInput bool) ([]*schem
 			}
 		}
 
-		varType, err := p.parseType(typ) // Type name will be resolved deeper down the stack.
+		varType, err := p.ParseType(typ) // Type name will be resolved deeper down the stack.
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse argument %v %v: %w", name, typ, err)
 		}

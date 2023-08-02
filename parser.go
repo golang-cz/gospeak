@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/golang-cz/gospeak/internal/parser"
 	"github.com/webrpc/webrpc/schema"
 	"golang.org/x/tools/go/packages"
 )
@@ -68,7 +69,7 @@ func Parse(filePath string) ([]*Target, error) {
 	}
 
 	// Collect Go interfaces with `//go:webrpc` comments.
-	targets, err := collectInterfaces(pkg)
+	targets, err := CollectInterfaces(pkg)
 	if err != nil {
 		return nil, fmt.Errorf("collecting Go interfaces: %w", err)
 	}
@@ -81,25 +82,25 @@ func Parse(filePath string) ([]*Target, error) {
 		}
 
 		// Miss.
-		p := &parser{
-			schema: &schema.WebRPCSchema{
+		p := &parser.Parser{
+			Schema: &schema.WebRPCSchema{
 				WebrpcVersion: "v1",
 				SchemaName:    target.InterfaceName,
 				SchemaVersion: "vTODO",
 			},
-			schemaPkgName:   pkg.PkgPath,
-			parsedTypes:     map[types.Type]*schema.VarType{},
-			parsedTypeNames: map[string]struct{}{},
-			pkg:             pkg,
+			SchemaPkgName:   pkg.PkgPath,
+			ParsedTypes:     map[types.Type]*schema.VarType{},
+			ParsedTypeNames: map[string]struct{}{},
+			Pkg:             pkg,
 
 			// TODO: Change this to map[*types.Package]string so we can rename duplicated pkgs?
-			importedPaths: map[string]struct{}{
+			ImportedPaths: map[string]struct{}{
 				// Initial schema file's package name artificially set by golang.org/x/tools/go/packages.
 				"command-line-arguments": {},
 			},
 		}
 
-		if err := p.collectEnums(); err != nil {
+		if err := p.CollectEnums(); err != nil {
 			return nil, fmt.Errorf("collecting enums: %w", err)
 		}
 
@@ -113,19 +114,19 @@ func Parse(filePath string) ([]*Target, error) {
 			return nil, fmt.Errorf("type %v{} is %T", target.InterfaceName, obj.Type().Underlying())
 		}
 
-		if err := p.parseInterfaceMethods(iface, target.InterfaceName); err != nil {
+		if err := p.ParseInterfaceMethods(iface, target.InterfaceName); err != nil {
 			return nil, fmt.Errorf("failed to parse interface %q: %w", target.InterfaceName, err)
 		}
 
-		target.Schema = p.schema
-		cache[target.InterfaceName] = p.schema
+		target.Schema = p.Schema
+		cache[target.InterfaceName] = p.Schema
 	}
 
 	return targets, nil
 }
 
 // Find all Go interfaces with the special //go:webrpc comments.
-func collectInterfaces(pkg *packages.Package) ([]*Target, error) {
+func CollectInterfaces(pkg *packages.Package) ([]*Target, error) {
 	var targets []*Target
 
 	for _, file := range pkg.Syntax {
@@ -188,23 +189,4 @@ func parseWebrpcCommand(cmd string) (*Target, error) {
 	}
 
 	return target, nil
-}
-
-// Parses Go source file and returns WebRPC schema.
-//
-// This parser was designed to run sequentially, without any concurrency, so we can leverage
-// maps to cache the already parsed types, while not having to deal with sync primitives.
-type parser struct {
-	schema *schema.WebRPCSchema
-
-	// Cache for already parsed types, to improve performance & so we can traverse circular dependencies.
-	parsedTypes     map[types.Type]*schema.VarType
-	parsedTypeNames map[string]struct{}
-
-	inlineMode    bool // When traversing `json:",inline"`, we don't want to store the struct type as WebRPC message.
-	importedPaths map[string]struct{}
-
-	schemaPkgName string // Schema file's package name.
-
-	pkg *packages.Package
 }
