@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/webrpc/webrpc/schema"
@@ -9,7 +10,7 @@ import (
 func TestStructFieldEnum(t *testing.T) {
 	t.Parallel()
 
-	type field struct {
+	type enum struct {
 		name     string
 		expr     string
 		t        schema.CoreType
@@ -22,11 +23,17 @@ func TestStructFieldEnum(t *testing.T) {
 
 	tt := []struct {
 		in  string
-		out *field
+		out *enum
 	}{
 		{
-			in:  "Status Status", // enum.Status
-			out: &field{name: "Status", expr: "Status", t: schema.T_Struct, goName: "Status", goType: "Status"},
+			in: `
+				// approved = 0
+				// pending  = 1
+				// closed   = 2
+				// new      = 3
+				type Status gospeak.Enum[int]
+			`,
+			out: &enum{name: "Status", expr: "Status", t: schema.T_Struct, goName: "Status", goType: "Status"},
 		},
 	}
 
@@ -78,13 +85,37 @@ func TestStructFieldEnum(t *testing.T) {
 			}
 		}
 
-		testStruct(t,
-			tc.in,
-			&schema.Type{
-				Kind:   "struct",
-				Name:   "TestStruct",
-				Fields: fields,
-			},
-		)
+		srcCode := fmt.Sprintf(`package test
+		
+			import (
+				"context"
+			
+				"github.com/golang-cz/gospeak"
+			)
+
+			%s
+		
+			type TestStruct struct {
+				Status Status
+			}
+			
+			//go:webrpc json -out=/dev/null
+			type TestAPI interface{
+				TestStruct(ctx context.Context) (tst *TestStruct, err error)
+			}
+
+			// Ensure all the imports are used.
+			//var _ = gospeak.Enum[int]{}
+			//var _ = Status{}
+			`, tc.in)
+
+		p, err := testParser(srcCode)
+		if err != nil {
+			t.Fatal(fmt.Errorf("parsing: %w", err))
+		}
+
+		if err := p.CollectEnums(); err != nil {
+			t.Fatalf("collecting enums: %v", err)
+		}
 	}
 }

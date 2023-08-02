@@ -18,13 +18,12 @@ import (
 func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 	t.Helper()
 
-	srcCode := fmt.Sprintf(`	package test
+	srcCode := fmt.Sprintf(`package test
 
 	import (
 		"context"
 		"time"
-		
-		"github.com/golang-cz/gospeak"
+
 		"github.com/golang-cz/gospeak/internal/parser/test/uuid"
 	)
 
@@ -51,24 +50,38 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		return nil
 	}
 
-	// approved = 0
-	// pending  = 1
-	// closed   = 2
-	// new      = 3
-	type Status gospeak.Enum[int]
-
 	// Ensure all the imports are used.
 	var _ time.Time
 	var _ uuid.UUID
 	var _ Number
 	var _ Locale
-	var _ Status
 	`, inputFields)
 
+	p, err := testStructParser(srcCode)
+	if err != nil {
+		t.Fatal(fmt.Errorf("error parsing: %q: %w", inputFields, err))
+	}
+
+	for _, got := range p.Schema.Types {
+		if got.Name != "TestStruct" {
+			continue
+		}
+
+		if !cmp.Equal(want, got) {
+			t.Errorf("%s\n%s\n", inputFields, coloredDiff(want, got))
+		}
+
+		return // success
+	}
+
+	t.Fatalf("%s\nexpected one struct type, got %s", inputFields, spew.Sdump(p.Schema.Types))
+	return
+}
+
+func testParser(srcCode string) (*parser.Parser, error) {
 	wd, err := os.Getwd()
 	if err != nil {
-		fmt.Println("Error:", err)
-		return
+		return nil, fmt.Errorf("getting working directory: %w", err)
 	}
 
 	package1Path := filepath.Join(wd, "proto.go")
@@ -99,38 +112,22 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 
 	pkgs, err := packages.Load(cfg, "file="+package1Path, "file="+package2Path)
 	if err != nil {
-		t.Fatal(inputFields, fmt.Errorf("loading Go packages: %w", err))
+		return nil, fmt.Errorf("error loading Go packages: %v\n%s", err, prefixLinesWithLineNumber(srcCode))
 	}
 
 	for _, pkg := range pkgs {
 		if len(pkg.Errors) > 0 {
-			t.Log(spew.Sdump(pkg.Errors))
+			return nil, fmt.Errorf("%v\n%s", spew.Sdump(pkg.Errors), prefixLinesWithLineNumber(srcCode))
 		}
 	}
 
 	if len(pkgs) != 2 {
-		t.Fatal(inputFields, fmt.Errorf("expected 2 Go packages, got %v\n%s", len(pkgs), spew.Sdump(pkgs)))
+		return nil, fmt.Errorf("expected 2 Go packages, got %v\n%s", len(pkgs), spew.Sdump(pkgs))
 	}
 
 	pkg := pkgs[0]
 
-	if len(pkg.Errors) > 0 {
-		t.Fatal(inputFields, fmt.Sprintf("%+v\n%s", pkg.Errors, prefixLinesWithLineNumber(srcCode)))
-	}
-
 	_, _ = gospeak.CollectInterfaces(pkg)
-
-	scope := pkg.Types.Scope()
-
-	obj := scope.Lookup("TestStruct")
-	if obj == nil {
-		t.Fatal(inputFields, fmt.Errorf("type TestStruct not defined"))
-	}
-
-	testStruct, ok := obj.Type().Underlying().(*types.Struct)
-	if !ok {
-		t.Fatal(inputFields, fmt.Errorf("type TestStruct is %T", obj.Type().Underlying()))
-	}
 
 	p := &parser.Parser{
 		Schema: &schema.WebRPCSchema{
@@ -150,27 +147,32 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		},
 	}
 
-	if err := p.CollectEnums(); err != nil {
-		t.Fatal(inputFields, fmt.Errorf("collecting enums: %w", err))
+	return p, nil
+}
+
+// Parses code with TestStruct type.
+func testStructParser(srcCode string) (*parser.Parser, error) {
+	p, err := testParser(srcCode)
+	if err != nil {
+		return nil, err
+	}
+
+	scope := p.Pkg.Types.Scope()
+
+	obj := scope.Lookup("TestStruct")
+	if obj == nil {
+		return nil, fmt.Errorf("type TestStruct not defined")
+	}
+
+	testStruct, ok := obj.Type().Underlying().(*types.Struct)
+	if !ok {
+		return nil, fmt.Errorf("type TestStruct is %T", obj.Type().Underlying())
 	}
 
 	_, err = p.ParseStruct("TestStruct", testStruct)
 	if err != nil {
-		t.Fatal(inputFields, fmt.Errorf("failed to parse struct TestStruct: %w", err))
+		return nil, fmt.Errorf("failed to parse struct TestStruct: %w", err)
 	}
 
-	for _, got := range p.Schema.Types {
-		if got.Name != "TestStruct" {
-			continue
-		}
-
-		if !cmp.Equal(want, got) {
-			t.Errorf("%s\n%s\n", inputFields, coloredDiff(want, got))
-		}
-
-		return // success
-	}
-
-	t.Fatalf("%s\nexpected one struct type, got %s", inputFields, spew.Sdump(p.Schema.Types))
-	return
+	return p, nil
 }

@@ -29,7 +29,7 @@ func TestStructFieldJsonTags(t *testing.T) {
 			out: &field{name: "ID", expr: "int64", t: schema.T_Int64, goName: "ID", goType: "int64"},
 		},
 		{
-			in:  "id int64", // unexported field
+			in:  "id int64", // unexported enum
 			out: nil,
 		},
 		{
