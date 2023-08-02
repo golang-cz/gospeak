@@ -1,8 +1,31 @@
 {
  "webrpc": "v1",
  "name": "PetStore",
- "version": "",
+ "version": "vTODO",
  "types": [
+  {
+   "kind": "enum",
+   "name": "Status",
+   "type": "int",
+   "fields": [
+    {
+     "name": "approved",
+     "value": "0"
+    },
+    {
+     "name": "pending",
+     "value": "1"
+    },
+    {
+     "name": "closed",
+     "value": "2"
+    },
+    {
+     "name": "new",
+     "value": "3"
+    }
+   ]
+  },
   {
    "kind": "struct",
    "name": "Tag",
@@ -194,7 +217,22 @@
        "go.field.name": "TagsPtr"
       },
       {
-       "go.field.type": "[]*Tag"
+       "go.field.type": "[]Tag"
+      }
+     ]
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "meta": [
+      {
+       "go.field.name": "Status"
+      },
+      {
+       "go.field.type": "Status"
+      },
+      {
+       "go.tag.json": "status"
       }
      ]
     }

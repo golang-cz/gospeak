@@ -2,6 +2,7 @@ all:
 	@awk -F'[ :]' '!/^all:/ && /^([A-z_-]+):/ {print "make " $$1}' Makefile
 
 generate:
+	make -C ../../ install
 	gospeak ./proto/api.go
 
 run-server:
