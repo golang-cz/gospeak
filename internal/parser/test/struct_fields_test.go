@@ -25,11 +25,11 @@ func TestStructFieldJsonTags(t *testing.T) {
 		out *field
 	}{
 		{
-			in:  "ID int64", // default name
+			in:  "ID int64", // default name in JSON
 			out: &field{name: "ID", expr: "int64", t: schema.T_Int64, goName: "ID", goType: "int64"},
 		},
 		{
-			in:  "id int64", // unexported enum
+			in:  "id int64", // unexported field - ignored in JSON
 			out: nil,
 		},
 		{
@@ -37,11 +37,11 @@ func TestStructFieldJsonTags(t *testing.T) {
 			out: nil,
 		},
 		{
-			in:  "ID *int64", // optional
+			in:  "ID *int64", // optional field
 			out: &field{name: "ID", expr: "int64", t: schema.T_Int64, goName: "ID", goType: "*int64", optional: true},
 		},
 		{
-			in:  "ID int64 `json:\"renamed_id\"`", // renamed in JSON
+			in:  "ID int64 `json:\"renamed_id\"`", // renamed field in JSON
 			out: &field{name: "renamed_id", expr: "int64", t: schema.T_Int64, goName: "ID", goType: "int64", jsonTag: "renamed_id"},
 		},
 		{
@@ -49,16 +49,16 @@ func TestStructFieldJsonTags(t *testing.T) {
 			out: &field{name: "ID", expr: "string", t: schema.T_String, goName: "ID", goType: "int64", jsonTag: ",string"},
 		},
 		{
-			in:  "ID int64 `json:\"id,string\"`", // string type in JSON
+			in:  "ID int64 `json:\"id,string\"`", // renamed field with string type in JSON
 			out: &field{name: "id", expr: "string", t: schema.T_String, goName: "ID", goType: "int64", jsonTag: "id,string"},
 		},
 		{
 			in:  "ID int64 `json:\",omitempty\"`", // optional in JSON
-			out: &field{name: "ID", expr: "int64", t: schema.T_Int64, goName: "ID", goType: "int64", jsonTag: ",omitempty", optional: true},
+			out: &field{name: "ID", expr: "int64", t: schema.T_Int64, goName: "ID", goType: "*int64", jsonTag: ",omitempty", optional: true},
 		},
 		{
-			in:  "ID int64 `json:\"id,string,omitempty\"`", // optional string type in JSON
-			out: &field{name: "id", expr: "string", t: schema.T_String, goName: "ID", goType: "int64", jsonTag: "id,string,omitempty", optional: true},
+			in:  "ID int64 `json:\"id,string,omitempty\"`", // optional with string type in JSON
+			out: &field{name: "id", expr: "string", t: schema.T_String, goName: "ID", goType: "*int64", jsonTag: "id,string,omitempty", optional: true},
 		},
 		{
 			in:  "CreatedAt time.Time",
@@ -73,7 +73,7 @@ func TestStructFieldJsonTags(t *testing.T) {
 			out: &field{name: "Number", expr: "int", t: schema.T_Int, goName: "Number", goType: "Number"},
 		},
 		{
-			in:  "NumberString Number `json:\",string\"`",
+			in:  "NumberString Number `json:\",string\"`", // string type in JSON
 			out: &field{name: "NumberString", expr: "string", t: schema.T_String, goName: "NumberString", goType: "Number", jsonTag: ",string"},
 		},
 		{
@@ -81,13 +81,21 @@ func TestStructFieldJsonTags(t *testing.T) {
 			out: &field{name: "LocaleString", expr: "string", t: schema.T_String, goName: "LocaleString", goType: "Locale"},
 		},
 		{
-			in:  "ID uuid.UUID", // uuid implements encoding.TextMarshaler interface, expect string in JSON
+			in:  "ID uuid.UUID", // string type in JSON, since uuid.UUID implements encoding.TextMarshaler interface
 			out: &field{name: "ID", expr: "string", t: schema.T_String, goName: "ID", goType: "uuid.UUID", goImport: "github.com/golang-cz/gospeak/internal/parser/test/uuid"},
 		},
 		{
 			in:  "ID uuid.UUID `json:\",string\"`", // string type in JSON
 			out: &field{name: "ID", expr: "string", t: schema.T_String, jsonTag: ",string", goName: "ID", goType: "uuid.UUID", goImport: "github.com/golang-cz/gospeak/internal/parser/test/uuid"},
 		},
+		//{
+		//	in:  "Embedded",
+		//	out: &field{name: "Embedded", expr: "Embedded", t: schema.T_Struct, goName: "Embedded", goType: "Embedded"},
+		//},
+		//{
+		//	in:  "Something Embedded",
+		//	out: &field{name: "Something", expr: "Embedded", t: schema.T_Struct, goName: "Something", goType: "Embedded"},
+		//},
 	}
 
 	for _, tc := range tt {

@@ -50,6 +50,10 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		return nil
 	}
 
+	type Embedded struct {
+		Number Number
+	}
+
 	// Ensure all the imports are used.
 	var _ time.Time
 	var _ uuid.UUID

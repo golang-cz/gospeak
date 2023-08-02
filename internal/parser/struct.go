@@ -35,7 +35,7 @@ func (p *Parser) ParseStruct(typeName string, structTyp *types.Struct) (*schema.
 			continue
 		}
 
-		field, err := p.parseStructField(typeName, structField, structTags)
+		field, err := p.parseStructField(typeName+"Field", structField, structTags)
 		if err != nil {
 			return nil, fmt.Errorf("parsing struct field %v: %w", i, err)
 		}
@@ -57,16 +57,15 @@ func (p *Parser) ParseStruct(typeName string, structTyp *types.Struct) (*schema.
 }
 
 // parses single Go struct field
-// if the field is embedded, ie. `json:",inline"`, recursively parse
+// if the field is embedded, ie. `json:",inline"`, parse recursively
 func (p *Parser) parseStructField(structTypeName string, field *types.Var, structTags string) (*schema.TypeField, error) {
+	fieldName := field.Name()
+	fieldType := field.Type()
+
+	jsonFieldName := fieldName
+	goFieldType := p.GoTypeName(fieldType)
 	optional := false
 
-	fieldName := field.Name()
-	jsonFieldName := fieldName
-	goFieldName := fieldName
-
-	fieldType := field.Type()
-	goFieldType := p.GoTypeName(fieldType)
 	goFieldImport := p.GoTypeImport(fieldType)
 
 	jsonTag, ok := GetJsonTag(structTags)
@@ -80,8 +79,12 @@ func (p *Parser) parseStructField(structTypeName string, field *types.Var, struc
 		}
 
 		optional = jsonTag.Omitempty
+		if optional {
+			goFieldType = "*" + goFieldType
+		}
 
 		if jsonTag.IsString { // struct field forced to be string by `json:",string"`
+
 			structField := &schema.TypeField{
 				Name: jsonFieldName,
 				Type: &schema.VarType{
@@ -90,7 +93,7 @@ func (p *Parser) parseStructField(structTypeName string, field *types.Var, struc
 				},
 				TypeExtra: schema.TypeExtra{
 					Meta: []schema.TypeFieldMeta{
-						{"go.field.name": goFieldName},
+						{"go.field.name": fieldName},
 						{"go.field.type": goFieldType},
 					},
 					Optional: optional,
@@ -111,6 +114,7 @@ func (p *Parser) parseStructField(structTypeName string, field *types.Var, struc
 
 	if _, ok := field.Type().Underlying().(*types.Pointer); ok {
 		optional = true
+		goFieldType = "*" + goFieldType
 	}
 
 	if _, ok := field.Type().Underlying().(*types.Struct); ok {
@@ -121,10 +125,10 @@ func (p *Parser) parseStructField(structTypeName string, field *types.Var, struc
 		//       Name string
 		//     }
 		//   }
-		structTypeName = structTypeName + "Anonymous" + field.Name()
+		structTypeName = /*structTypeName + */ "Anonymous" + field.Name()
 	}
 
-	varType, err := p.ParseNamedType(structTypeName, fieldType)
+	varType, err := p.ParseNamedType(goFieldType, fieldType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse var %v: %w", field.Name(), err)
 	}
@@ -134,7 +138,7 @@ func (p *Parser) parseStructField(structTypeName string, field *types.Var, struc
 		Type: varType,
 		TypeExtra: schema.TypeExtra{
 			Meta: []schema.TypeFieldMeta{
-				{"go.field.name": goFieldName},
+				{"go.field.name": fieldName},
 				{"go.field.type": goFieldType},
 			},
 			Optional: optional,

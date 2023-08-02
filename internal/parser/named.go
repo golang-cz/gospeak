@@ -36,37 +36,15 @@ func (p *Parser) ParseNamedType(typeName string, typ types.Type) (varType *schem
 	case *types.Named:
 		pkg := v.Obj().Pkg()
 		underlying := v.Underlying()
+		typeName := p.GoTypeName(typ)
 
 		if pkg != nil {
-			typeName := p.GoTypeName(v)
-
 			if typeName == "time.Time" {
 				return &schema.VarType{
 					Expr: "timestamp",
 					Type: schema.T_Timestamp,
 				}, nil
 			}
-
-			//underlyingTypeName := p.GoTypeName(underlying)
-
-			//	if Pkg.Path() == "github.com/golang-cz/gospeak" && strings.HasPrefix(typeName, "Enum[") && strings.HasSuffix(typeName, "]") {
-			//
-			//		name := v.Obj().Id()
-			//
-			//		enumElemType, err := p.ParseNamedTypeParseNamedTypeParseNamedType(underlyingTypeName, underlying)
-			//		if err != nil {
-			//			return nil, fmt.Errorf("parsing gospeak.Enum underlying type: %w", err)
-			//		}
-			//
-			//		return &Schema.VarType{
-			//			Expr: name,
-			//			Type: Schema.T_Struct, // webrpc TODO: should be Schema.T_Enum
-			//			Struct: &Schema.VarStructType{ // webrpc TODO: should be EnumType{}
-			//				Name: name,
-			//				Type: enumType,
-			//			},
-			//		}, nil
-			//	}
 		}
 
 		// If the type implements encoding.TextMarshaler, it's a string.
