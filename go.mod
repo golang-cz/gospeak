@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/google/go-cmp v0.5.9
-	github.com/webrpc/webrpc v0.12.0
+	github.com/webrpc/webrpc v0.12.1-0.20230801165705-bbb62bb52b8f
 	golang.org/x/tools v0.11.0
 )
 
