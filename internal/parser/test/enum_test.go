@@ -27,10 +27,10 @@ func TestStructFieldEnum(t *testing.T) {
 			t: schema.T_Int,
 			out: []*schema.TypeField{
 				// TODO: webrpc name/value looks to be reversed
-				&schema.TypeField{Name: "0", TypeExtra: schema.TypeExtra{Value: "approved"}},
-				&schema.TypeField{Name: "1", TypeExtra: schema.TypeExtra{Value: "pending"}},
-				&schema.TypeField{Name: "2", TypeExtra: schema.TypeExtra{Value: "closed"}},
-				&schema.TypeField{Name: "3", TypeExtra: schema.TypeExtra{Value: "new"}},
+				&schema.TypeField{Name: "approved", TypeExtra: schema.TypeExtra{Value: "0"}},
+				&schema.TypeField{Name: "pending", TypeExtra: schema.TypeExtra{Value: "1"}},
+				&schema.TypeField{Name: "closed", TypeExtra: schema.TypeExtra{Value: "2"}},
+				&schema.TypeField{Name: "new", TypeExtra: schema.TypeExtra{Value: "3"}},
 			},
 		},
 		{
@@ -43,11 +43,10 @@ func TestStructFieldEnum(t *testing.T) {
 			`,
 			t: schema.T_Uint64,
 			out: []*schema.TypeField{
-				// TODO: webrpc name/value looks to be reversed
-				&schema.TypeField{Name: "0", TypeExtra: schema.TypeExtra{Value: "approved"}},
-				&schema.TypeField{Name: "1", TypeExtra: schema.TypeExtra{Value: "pending"}},
-				&schema.TypeField{Name: "2", TypeExtra: schema.TypeExtra{Value: "closed"}},
-				&schema.TypeField{Name: "3", TypeExtra: schema.TypeExtra{Value: "new"}},
+				&schema.TypeField{Name: "approved", TypeExtra: schema.TypeExtra{Value: "0"}},
+				&schema.TypeField{Name: "pending", TypeExtra: schema.TypeExtra{Value: "1"}},
+				&schema.TypeField{Name: "closed", TypeExtra: schema.TypeExtra{Value: "2"}},
+				&schema.TypeField{Name: "new", TypeExtra: schema.TypeExtra{Value: "3"}},
 			},
 		},
 	}

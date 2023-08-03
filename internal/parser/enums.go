@@ -90,16 +90,15 @@ func (p *Parser) CollectEnums() error {
 							// new      = 3
 							for i, comment := range doc.List {
 								commentValue, _ := strings.CutPrefix(comment.Text, "//")
-								before, after, found := strings.Cut(commentValue, "=") // approved = 0
-								if !found {                                            // approved
-									before = commentValue
-									after = fmt.Sprintf("%v", i)
+								name, value, found := strings.Cut(commentValue, "=") // approved = 0
+								if !found {                                          // approved
+									name = commentValue
+									value = fmt.Sprintf("%v", i)
 								}
-								// This looks reversed. TODO: webrpc enum type
 								enumType.Fields = append(enumType.Fields, &schema.TypeField{
-									Name: strings.TrimSpace(after),
+									Name: strings.TrimSpace(name),
 									TypeExtra: schema.TypeExtra{
-										Value: strings.TrimSpace(before),
+										Value: strings.TrimSpace(value),
 									},
 								})
 							}

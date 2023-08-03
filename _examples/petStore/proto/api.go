@@ -46,8 +46,8 @@ type Tag struct {
 	Name string
 }
 
-// 0 = approved
-// 1 = pending
-// 2 = closed
-// 3 = new
+// approved = 0
+// pending  = 1
+// closed   = 2
+// new      = 3
 type Status gospeak.Enum[int]
