@@ -22,7 +22,7 @@ func TestStructFieldEnum(t *testing.T) {
 				// pending  = 1
 				// closed   = 2
 				// new      = 3
-				type Status gospeak.Enum[int]
+				type Status enum.Int
 			`,
 			t: schema.T_Int,
 			out: []*schema.TypeField{
@@ -39,7 +39,7 @@ func TestStructFieldEnum(t *testing.T) {
 				// pending
 				// closed
 				// new
-				type Status gospeak.Enum[uint64]
+				type Status enum.Uint64
 			`,
 			t: schema.T_Uint64,
 			out: []*schema.TypeField{
@@ -57,7 +57,7 @@ func TestStructFieldEnum(t *testing.T) {
 			import (
 				"context"
 			
-				"github.com/golang-cz/gospeak"
+				"github.com/golang-cz/gospeak/enum"
 			)
 
 			%s

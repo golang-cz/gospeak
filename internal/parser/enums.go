@@ -32,7 +32,7 @@ func (p *Parser) CollectEnums() error {
 			if typeDeclaration, ok := decl.(*ast.GenDecl); ok && typeDeclaration.Tok == token.IMPORT {
 				for _, spec := range typeDeclaration.Specs {
 					if importSpec, ok := spec.(*ast.ImportSpec); ok {
-						if strings.Contains(importSpec.Path.Value, `"github.com/golang-cz/gospeak"`) {
+						if strings.Contains(importSpec.Path.Value, `"github.com/golang-cz/gospeak/enum"`) {
 							gospeakImportFound = true
 						}
 					}
@@ -49,23 +49,26 @@ func (p *Parser) CollectEnums() error {
 			if typeDeclaration, ok := decl.(*ast.GenDecl); ok && typeDeclaration.Tok == token.TYPE {
 				for _, spec := range typeDeclaration.Specs {
 					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
-						var enumName, enumTypeName string
-						if iExpr, ok := typeSpec.Type.(*ast.IndexExpr); ok {
-							if selExpr, ok := iExpr.X.(*ast.SelectorExpr); ok {
-								pkgName, ok := selExpr.X.(*ast.Ident)
-								if ok && pkgName.Name == "gospeak" && selExpr.Sel.Name == "Enum" {
-									if id, ok := iExpr.Index.(*ast.Ident); ok {
-										enumName = typeSpec.Name.Name
-										enumTypeName = id.Name
-									}
-								}
-							}
+						//panic(debug.Sdump(typeSpec))
+
+						selExpr, ok := typeSpec.Type.(*ast.SelectorExpr)
+						if !ok {
+							continue
 						}
-						if enumName == "" || enumTypeName == "" {
+						ident, ok := selExpr.X.(*ast.Ident)
+						if !ok {
 							continue
 						}
 
-						enumElemType, ok := schema.CoreTypeFromString[enumTypeName]
+						// type Status enum.Int64
+						enumName := typeSpec.Name.Name   // Status
+						pkgName := ident.Name            // enum
+						enumTypeName := selExpr.Sel.Name // Int64
+						if pkgName != "enum" || enumName == "" || enumTypeName == "" {
+							continue
+						}
+
+						enumElemType, ok := schema.CoreTypeFromString[strings.ToLower(enumTypeName)]
 						if !ok {
 							return fmt.Errorf("unknown enum type %v", enumTypeName)
 						}
