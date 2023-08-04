@@ -8,7 +8,18 @@ import (
 )
 
 func (p *Parser) GoTypeName(typ types.Type) string {
-	name := typ.String()                     // []*github.com/golang-cz/gospeak/pkg.Typ
+	name := typ.String() // []*github.com/golang-cz/gospeak/pkg.Typ
+
+	if typNamed, ok := typ.(*types.Named); ok {
+		// Versioned packages.
+		// github.com/gofrs/uuid/v5.UUID => // github.com/gofrs/uuid.UUID
+		if typNamed.Obj().Pkg() != nil {
+			if !strings.Contains(name, typNamed.Obj().Pkg().Name()+".") {
+				name = strings.ReplaceAll(name, typNamed.Obj().Type().String(), typNamed.Obj().Pkg().Name()+"."+typNamed.Obj().Name())
+			}
+		}
+	}
+
 	name = strings.ReplaceAll(name, "*", "") // []github.com/golang-cz/gospeak/pkg.Typ
 
 	firstLetter := findFirstLetter(name)
