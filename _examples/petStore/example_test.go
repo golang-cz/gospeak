@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/golang-cz/gospeak/_examples/petStore/client"
 	"github.com/golang-cz/gospeak/_examples/petStore/proto"
+	"github.com/golang-cz/gospeak/_examples/petStore/proto/client"
 	"github.com/golang-cz/gospeak/_examples/petStore/server"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,7 +23,7 @@ func TestPetStore(t *testing.T) {
 			PetStore: map[int64]*proto.Pet{},
 		}
 
-		srv := httptest.NewServer(server.NewPetStoreServer(api))
+		srv := httptest.NewServer(proto.NewPetStoreServer(api))
 		defer srv.Close()
 
 		*serverUrl = srv.URL

@@ -4254,7 +4254,7 @@
 	}),
 	SchemaHash: (string) (len=40) "204f6b26587305ef3a4c043b8636035ada3889ef",
 	WebrpcGenVersion: (string) (len=11) "v0.13.0-dev",
-	WebrpcGenCommand: (string) (len=22) "gospeak ./proto/api.go",
+	WebrpcGenCommand: (string) (len=9) "gospeak .",
 	WebrpcTarget: (string) (len=5) "debug",
 	WebrpcErrors: ([]*schema.Error) (len=8 cap=8) {
 		(*schema.Error)({

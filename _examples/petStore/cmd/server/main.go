@@ -21,7 +21,7 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(DebugPayload)
-	r.Handle("/*", server.NewPetStoreServer(api))
+	r.Handle("/*", proto.NewPetStoreServer(api))
 
 	log.Println("Serving PetStore API at :8080")
 	http.ListenAndServe(":8080", r)

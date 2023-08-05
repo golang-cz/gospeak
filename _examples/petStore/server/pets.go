@@ -9,7 +9,7 @@ import (
 func (s *API) GetPet(ctx context.Context, ID int64) (pet *proto.Pet, err error) {
 	pet, ok := s.PetStore[ID]
 	if !ok {
-		return nil, ErrorNotFound("pet(%v) not found", ID)
+		return nil, proto.ErrorNotFound("pet(%v) not found", ID)
 	}
 	return pet, nil
 }
@@ -25,7 +25,7 @@ func (s *API) ListPets(ctx context.Context) (pets []*proto.Pet, err error) {
 
 func (s *API) CreatePet(ctx context.Context, pet *proto.Pet) (*proto.Pet, error) {
 	if pet == nil {
-		return nil, ErrorInvalidArgument("pet", "pet is required")
+		return nil, proto.ErrorInvalidArgument("pet", "pet is required")
 	}
 
 	s.mu.Lock()
@@ -40,7 +40,7 @@ func (s *API) CreatePet(ctx context.Context, pet *proto.Pet) (*proto.Pet, error)
 
 func (s *API) UpdatePet(ctx context.Context, ID int64, pet *proto.Pet) (*proto.Pet, error) {
 	if pet == nil {
-		return nil, ErrorInvalidArgument("pet", "pet is required")
+		return nil, proto.ErrorInvalidArgument("pet", "pet is required")
 	}
 
 	s.mu.Lock()
@@ -48,7 +48,7 @@ func (s *API) UpdatePet(ctx context.Context, ID int64, pet *proto.Pet) (*proto.P
 
 	_, ok := s.PetStore[pet.ID]
 	if !ok {
-		return nil, ErrorNotFound("pet(%v) not found", ID)
+		return nil, proto.ErrorNotFound("pet(%v) not found", ID)
 	}
 
 	s.PetStore[pet.ID] = pet

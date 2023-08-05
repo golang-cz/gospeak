@@ -1,18 +1,19 @@
+//go:generate go run github.com/golang-cz/gospeak/cmd/gospeak .
 package proto
 
 import (
 	"context"
 	"time"
 
-	"github.com/golang-cz/gospeak"
+	"github.com/golang-cz/gospeak/enum"
 	"github.com/google/uuid"
 )
 
 //go:webrpc json -out=./petstore.gen.json
 //go:webrpc debug -out=./petstore.debug.gen.txt
-//go:webrpc golang -server -pkg=server -json=jsoniter -importTypesFrom=github.com/golang-cz/gospeak/_examples/petStore/proto -legacyErrors=true -out=./server/server.gen.go
-//go:webrpc golang -client -pkg=client -json=jsoniter -out=./client/petstore.gen.go
-//go:webrpc typescript -client -out=./petstore.gen.ts
+//go:webrpc github.com/webrpc/gen-golang@tags/opts_types -server -pkg=proto -json=stdlib -types=false -legacyErrors=true -out=./server.gen.go
+//go:webrpc github.com/webrpc/gen-golang@tags/opts_types -client -pkg=client -json=stdlib -out=./client/petstore.gen.go
+//go:webrpc typescript -client -out=./client/petstore.gen.ts
 //go:webrpc json -out=./petstore.gen.json
 //go:webrpc openapi -out=./petstore.gen.yaml
 type PetStore interface {
@@ -50,4 +51,4 @@ type Tag struct {
 // pending  = 1
 // closed   = 2
 // new      = 3
-type Status gospeak.Enum[int]
+type Status enum.Int
