@@ -33,21 +33,11 @@ func main() {
 	}
 
 	if len(targets) == 0 {
-		fmt.Fprintf(os.Stderr, "no interfaces with //go:webrpc found, see https://github.com/golang-cz/gospeak\n")
+		fmt.Fprintf(os.Stderr, "no interface has //go:webrpc directive, see https://github.com/golang-cz/gospeak\n")
 		os.Exit(1)
 	}
 
 	for _, target := range targets {
-		if target.Generator == "json" {
-			jsonSchema, _ := target.Schema.ToJSON()
-			if err := os.WriteFile(target.OutFile, []byte(jsonSchema), 0644); err != nil {
-				fmt.Fprintf(os.Stderr, "failed to write to %q file: %v\n", target.OutFile, err)
-				os.Exit(1)
-			}
-			fmt.Printf("%20v => %v ✓\n", target.InterfaceName, target.OutFile)
-			continue
-		}
-
 		config := &gen.Config{
 			RefreshCache:    false,
 			Format:          false,
