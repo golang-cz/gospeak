@@ -24,28 +24,38 @@ type Target struct {
 
 // Parse Go source file or package folder and return WebRPC schema.
 func Parse(filePath string) ([]*Target, error) {
-	path, err := filepath.Abs(filePath)
+	dir, err := filepath.Abs(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get directory from %q: %w", path, err)
+		return nil, fmt.Errorf("failed to get directory from %q: %w", dir, err)
 	}
 
-	file, err := os.Stat(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open %q", path)
-	}
-	if file.Mode().IsRegular() {
-		// Parse all files in the given schema file's directory, so the parser can see all the pkg files.
-		path = filepath.Dir(path)
+	// Parse the whole directory even if a single file is provided,
+	// so the parser can see all pkg files.
+	if file, err := os.Stat(dir); err != nil {
+		return nil, fmt.Errorf("failed to open %q", dir)
+	} else if file.Mode().IsRegular() {
+		dir = filepath.Dir(dir)
 	}
 
 	cfg := &packages.Config{
-		Dir:  path,
-		Mode: packages.NeedName | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo | packages.NeedImports,
+		Dir:     dir,
+		Mode:    packages.NeedName | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo | packages.NeedImports,
+		Overlay: map[string][]byte{},
 	}
 
-	pkgs, err := packages.Load(cfg, path)
+	// Make the parser ignore all previously generated Go files to avoid the
+	// chicken-egg problem (ie. syntax errors in file we're currently generating).
+	_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err == nil && !info.IsDir() && strings.HasSuffix(path, ".gen.go") {
+			// Overlay the source with an empty package name.
+			cfg.Overlay[path] = []byte(fmt.Sprintf("package %s", filepath.Base(dir)))
+		}
+		return nil
+	})
+
+	pkgs, err := packages.Load(cfg, dir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load Go packages from %q: %w", path, err)
+		return nil, fmt.Errorf("failed to load Go packages from %q: %w", dir, err)
 	}
 
 	// Print all errors.
@@ -60,7 +70,7 @@ func Parse(filePath string) ([]*Target, error) {
 	}
 
 	if len(pkgs) != 1 {
-		return nil, fmt.Errorf("failed to load Go package (len=%v) from %q", len(pkgs), path)
+		return nil, fmt.Errorf("failed to load Go package (len=%v) from %q", len(pkgs), dir)
 	}
 	pkg := pkgs[0]
 
