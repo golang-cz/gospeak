@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"go/types"
+	"strings"
 
 	"github.com/webrpc/webrpc/schema"
 )
@@ -83,11 +84,25 @@ func (p *Parser) getMethodArguments(params *types.Tuple, isInput bool) ([]*schem
 
 		name := param.Name()
 		if name == "" {
-			// TODO: Name the field based on field type? (strings []string, hub *Hub)
+			// If the argument's name is not defined, come up with a name based on its type.
+			// *pkg.User => user
+			// []*pkg.User => userList
+			// []string => stringList
+
+			name = typ.String()
+			name = name[findFirstLetter(name):]
+			if i := strings.LastIndex(name, "."); i > 0 {
+				name = name[i+1:]
+			}
+			name = firstToLower(name)
+
+			switch typ.(type) {
+			case *types.Slice, *types.Array:
+				name += "List"
+			}
+
 			if isInput {
-				name = fmt.Sprintf("arg%v", i) // 0 is `ctx context.Context`
-			} else {
-				name = fmt.Sprintf("ret%v", i+1)
+				name += "Req"
 			}
 		}
 

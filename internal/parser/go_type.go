@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 func (p *Parser) GoTypeName(typ types.Type) string {
@@ -64,4 +65,16 @@ func findFirstLetter(s string) int {
 		}
 	}
 	return 0
+}
+
+func firstToLower(s string) string {
+	orig, size := utf8.DecodeRuneInString(s)
+	if orig == utf8.RuneError && size <= 1 {
+		return s
+	}
+	lower := unicode.ToLower(orig)
+	if orig == lower {
+		return s
+	}
+	return string(lower) + s[size:]
 }
