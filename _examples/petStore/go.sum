@@ -17,6 +17,11 @@ github.com/gliderlabs/ssh v0.1.3/go.mod h1:U7qILu1NlMHj9FlMhZLlkCdDnU1DBEAqr0aev
 github.com/gliderlabs/ssh v0.2.2/go.mod h1:U7qILu1NlMHj9FlMhZLlkCdDnU1DBEAqr0aevW3Awn0=
 github.com/go-chi/chi/v5 v5.0.10 h1:rLz5avzKpjqxrYwXNfmjkrYYXOyLJd37pz53UFHC6vk=
 github.com/go-chi/chi/v5 v5.0.10/go.mod h1:DslCQbL2OYiznFReuXYUmQ2hGd1aDpCnlMNITLSKoi8=
+github.com/golang-cz/gospeak v0.6.0/go.mod h1:Bkm3lL+H7zDuTDGRITvW909gwLtXsBT/WY5vkpb99zY=
+github.com/golang-cz/gospeak v0.6.1 h1:HWSho/4Xa+N1M7sD2O/s+qiw6TAiar1xbnr6KyfyTz4=
+github.com/golang-cz/gospeak v0.6.1/go.mod h1:Bkm3lL+H7zDuTDGRITvW909gwLtXsBT/WY5vkpb99zY=
+github.com/golang-cz/gospeak v0.6.2 h1:tdpcczFAnzppuRpq5LYv9VxolwlmAY5m7dVPwjqowOg=
+github.com/golang-cz/gospeak v0.6.2/go.mod h1:iCN0im0I9FBA+xLtVM1PUOH4bBEw4nmGFfFPoIhmfGY=
 github.com/golang-cz/textcase v1.2.0 h1:dX1cg09+7PLky8yUe9rYWa64epzW80TGiJYPz5vgxvM=
 github.com/golang-cz/textcase v1.2.0/go.mod h1:aWsQknYwxtTS2zSCrGGoRIsxmzjsHomRqLeMeVb+SKU=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
@@ -87,6 +92,8 @@ github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKs
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/webrpc/webrpc v0.12.1-0.20230801165705-bbb62bb52b8f h1:K5xCTeoVUTcl71hzTOnOIo5YckV3T+XtqcvCmE6JuaU=
 github.com/webrpc/webrpc v0.12.1-0.20230801165705-bbb62bb52b8f/go.mod h1:DwRj+2Vd0r4sanozfosHdv4RYi8kALVyVvpBPYqeGDQ=
+github.com/webrpc/webrpc v0.12.1 h1:L1PxRykmb6AyoOWjSsUjIhc3zwkAehx/DqGJ6nn0WUg=
+github.com/webrpc/webrpc v0.12.1/go.mod h1:DwRj+2Vd0r4sanozfosHdv4RYi8kALVyVvpBPYqeGDQ=
 github.com/xanzy/ssh-agent v0.2.1/go.mod h1:mLlQY/MoOhWBj+gOGMQkOeiEvkx+8pJSI+0Bx9h2kr4=
 github.com/xanzy/ssh-agent v0.3.2 h1:eKj4SX2Fe7mui28ZgnFW5fmTz1EIr7ugo5s6wDxdHBM=
 github.com/xanzy/ssh-agent v0.3.2/go.mod h1:6dzNDKs0J9rVPHPhaGCukekBHKqfl+L3KghI1Bc68Uw=

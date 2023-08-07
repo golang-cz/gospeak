@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -24,14 +23,16 @@ func main() {
 	r.Handle("/*", proto.NewPetStoreServer(api))
 
 	log.Println("Serving PetStore API at :8080")
-	http.ListenAndServe(":8080", r)
+	if err := http.ListenAndServe(":8080", r); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func DebugPayload(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var bufReq, bufResp bytes.Buffer
 
-		r.Body = ioutil.NopCloser(io.TeeReader(r.Body, &bufReq))
+		r.Body = io.NopCloser(io.TeeReader(r.Body, &bufReq))
 		rw := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 		rw.Tee(&bufResp)
 

@@ -647,8 +647,8 @@
 					(*schema.TypeField)({
 						Name: (string) (len=6) "status",
 						Type: (*schema.VarType)({
-							Expr: (string) (len=3) "int",
-							Type: (schema.CoreType) 10,
+							Expr: (string) (len=3) "any",
+							Type: (schema.CoreType) 2,
 							List: (*schema.VarListType)(<nil>),
 							Map: (*schema.VarMapType)(<nil>),
 							Struct: (*schema.VarStructType)(<nil>)
@@ -1230,8 +1230,8 @@
 												(*schema.TypeField)({
 													Name: (string) (len=6) "status",
 													Type: (*schema.VarType)({
-														Expr: (string) (len=3) "int",
-														Type: (schema.CoreType) 10,
+														Expr: (string) (len=3) "any",
+														Type: (schema.CoreType) 2,
 														List: (*schema.VarListType)(<nil>),
 														Map: (*schema.VarMapType)(<nil>),
 														Struct: (*schema.VarStructType)(<nil>)
@@ -1809,8 +1809,8 @@
 												(*schema.TypeField)({
 													Name: (string) (len=6) "status",
 													Type: (*schema.VarType)({
-														Expr: (string) (len=3) "int",
-														Type: (schema.CoreType) 10,
+														Expr: (string) (len=3) "any",
+														Type: (schema.CoreType) 2,
 														List: (*schema.VarListType)(<nil>),
 														Map: (*schema.VarMapType)(<nil>),
 														Struct: (*schema.VarStructType)(<nil>)
@@ -2434,8 +2434,8 @@
 												(*schema.TypeField)({
 													Name: (string) (len=6) "status",
 													Type: (*schema.VarType)({
-														Expr: (string) (len=3) "int",
-														Type: (schema.CoreType) 10,
+														Expr: (string) (len=3) "any",
+														Type: (schema.CoreType) 2,
 														List: (*schema.VarListType)(<nil>),
 														Map: (*schema.VarMapType)(<nil>),
 														Struct: (*schema.VarStructType)(<nil>)
@@ -3026,8 +3026,8 @@
 														(*schema.TypeField)({
 															Name: (string) (len=6) "status",
 															Type: (*schema.VarType)({
-																Expr: (string) (len=3) "int",
-																Type: (schema.CoreType) 10,
+																Expr: (string) (len=3) "any",
+																Type: (schema.CoreType) 2,
 																List: (*schema.VarListType)(<nil>),
 																Map: (*schema.VarMapType)(<nil>),
 																Struct: (*schema.VarStructType)(<nil>)
@@ -3629,8 +3629,8 @@
 												(*schema.TypeField)({
 													Name: (string) (len=6) "status",
 													Type: (*schema.VarType)({
-														Expr: (string) (len=3) "int",
-														Type: (schema.CoreType) 10,
+														Expr: (string) (len=3) "any",
+														Type: (schema.CoreType) 2,
 														List: (*schema.VarListType)(<nil>),
 														Map: (*schema.VarMapType)(<nil>),
 														Struct: (*schema.VarStructType)(<nil>)
@@ -4208,8 +4208,8 @@
 												(*schema.TypeField)({
 													Name: (string) (len=6) "status",
 													Type: (*schema.VarType)({
-														Expr: (string) (len=3) "int",
-														Type: (schema.CoreType) 10,
+														Expr: (string) (len=3) "any",
+														Type: (schema.CoreType) 2,
 														List: (*schema.VarListType)(<nil>),
 														Map: (*schema.VarMapType)(<nil>),
 														Struct: (*schema.VarStructType)(<nil>)
@@ -4252,7 +4252,7 @@
 		},
 		Deprecated_Messages: ([]interface {}) <nil>
 	}),
-	SchemaHash: (string) (len=40) "204f6b26587305ef3a4c043b8636035ada3889ef",
+	SchemaHash: (string) (len=40) "bc743e01dd79d6a627daf7f036d1a798fab4055f",
 	WebrpcGenVersion: (string) (len=11) "v0.13.0-dev",
 	WebrpcGenCommand: (string) (len=22) "gospeak ./proto/api.go",
 	WebrpcTarget: (string) (len=5) "debug",

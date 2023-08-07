@@ -223,7 +223,7 @@
     },
     {
      "name": "status",
-     "type": "int",
+     "type": "any",
      "meta": [
       {
        "go.field.name": "Status"

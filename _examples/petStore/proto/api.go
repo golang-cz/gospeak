@@ -11,8 +11,8 @@ import (
 
 //go:webrpc json -out=./petstore.gen.json
 //go:webrpc debug -out=./petstore.debug.gen.txt
-//go:webrpc github.com/webrpc/gen-golang@tags/opts_types -server -pkg=proto -json=stdlib -types=false -legacyErrors=true -out=./server.gen.go
-//go:webrpc github.com/webrpc/gen-golang@tags/opts_types -client -pkg=client -json=stdlib -out=./client/petstore.gen.go
+//go:webrpc golang -server -pkg=proto -json=stdlib -types=false -legacyErrors=true -out=./server.gen.go
+//go:webrpc golang -client -pkg=client -json=stdlib -out=./client/petstore.gen.go
 //go:webrpc typescript -client -out=./client/petstore.gen.ts
 //go:webrpc json -out=./petstore.gen.json
 //go:webrpc openapi -out=./petstore.gen.yaml
