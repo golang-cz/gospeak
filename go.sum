@@ -80,10 +80,8 @@ github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
-github.com/webrpc/webrpc v0.12.0 h1:c/kbR4/jParuNN8z+YfSSrebiBQgssBRsOCa2BJaAso=
-github.com/webrpc/webrpc v0.12.0/go.mod h1:iNMGZDFqcH559z9Jb9QrqRelqU82PCMz17OPq2BY6Zg=
-github.com/webrpc/webrpc v0.12.1-0.20230801165705-bbb62bb52b8f h1:K5xCTeoVUTcl71hzTOnOIo5YckV3T+XtqcvCmE6JuaU=
-github.com/webrpc/webrpc v0.12.1-0.20230801165705-bbb62bb52b8f/go.mod h1:DwRj+2Vd0r4sanozfosHdv4RYi8kALVyVvpBPYqeGDQ=
+github.com/webrpc/webrpc v0.12.1 h1:L1PxRykmb6AyoOWjSsUjIhc3zwkAehx/DqGJ6nn0WUg=
+github.com/webrpc/webrpc v0.12.1/go.mod h1:DwRj+2Vd0r4sanozfosHdv4RYi8kALVyVvpBPYqeGDQ=
 github.com/xanzy/ssh-agent v0.2.1/go.mod h1:mLlQY/MoOhWBj+gOGMQkOeiEvkx+8pJSI+0Bx9h2kr4=
 github.com/xanzy/ssh-agent v0.3.2 h1:eKj4SX2Fe7mui28ZgnFW5fmTz1EIr7ugo5s6wDxdHBM=
 github.com/xanzy/ssh-agent v0.3.2/go.mod h1:6dzNDKs0J9rVPHPhaGCukekBHKqfl+L3KghI1Bc68Uw=
