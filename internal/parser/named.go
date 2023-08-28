@@ -8,18 +8,16 @@ import (
 )
 
 func (p *Parser) ParseNamedType(typeName string, typ types.Type) (varType *schema.VarType, err error) {
-	// Return a parsedType from cache, if exists.
+	// On cache HIT, return a pointer to parsedType from cache.
 	if parsedType, ok := p.ParsedTypes[typ]; ok {
 		return parsedType, nil
 	}
 
-	// Otherwise, create a new parsedType record and warm up the cache up-front.
-	// Claim the cache key and fill in the value later in defer(). Meanwhile, any
-	// following recursive call(s) to this function (ie. on recursive types like
-	// self-referencing structs, linked lists, graphs, circular dependencies etc.)
-	// will return early with the same pointer.
+	// On cache MISS, create new parsedType pointer and warm up the cache with it. Any subsequent/recursive
+	// calls to parse the same type (e.g. on recursive types like self-referencing structs, linked lists,
+	// graphs, circular dependencies etc.) would return the same pointer. The actual value is filled in defer().
 	//
-	// Note: We're parsing sequentially, no need for sync.Map.
+	// Note: Since we're parsing the AST sequentially, we don't need to use mutex/sync.Map or anything.
 	cacheDoNotReturn := &schema.VarType{
 		Expr: typeName,
 	}
