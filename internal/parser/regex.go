@@ -19,6 +19,7 @@ type JsonTag struct {
 	Value     string
 	IsString  bool
 	Omitempty bool
+	Inline    bool
 }
 
 func GetJsonTag(structTags string) (JsonTag, bool) {
@@ -41,6 +42,7 @@ func GetJsonTag(structTags string) (JsonTag, bool) {
 		Value:     submatches[1] + submatches[2],
 		IsString:  strings.Contains(submatches[2], ",string"),
 		Omitempty: strings.Contains(submatches[2], ",omitempty"),
+		Inline:    strings.Contains(submatches[2], ",inline"),
 	}
 
 	return jsonTag, true

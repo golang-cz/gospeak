@@ -3,7 +3,6 @@ package parser
 import (
 	"fmt"
 	"go/types"
-	"strings"
 
 	"github.com/webrpc/webrpc/schema"
 )
@@ -21,7 +20,12 @@ func (p *Parser) ParseStruct(typeName string, structTyp *types.Struct) (*schema.
 		}
 		structTags := structTyp.Tag(i)
 
-		if structField.Embedded() || strings.Contains(structTags, `json:",inline"`) {
+		jsonTag, _ := GetJsonTag(structTags)
+		if jsonTag.Name == "-" { // struct field ignored by `json:"-"` struct tag
+			continue
+		}
+
+		if structField.Embedded() || jsonTag.Inline {
 			varType, err := p.ParseNamedType("", structField.Type())
 			if err != nil {
 				return nil, fmt.Errorf("parsing var %v: %w", structField.Name(), err)
@@ -35,7 +39,7 @@ func (p *Parser) ParseStruct(typeName string, structTyp *types.Struct) (*schema.
 			continue
 		}
 
-		field, err := p.parseStructField(typeName+"Field", structField, structTags)
+		field, err := p.parseStructField(typeName+"Field", structField, jsonTag)
 		if err != nil {
 			return nil, fmt.Errorf("parsing struct field %v: %w", i, err)
 		}
@@ -58,7 +62,7 @@ func (p *Parser) ParseStruct(typeName string, structTyp *types.Struct) (*schema.
 
 // parses single Go struct field
 // if the field is embedded, ie. `json:",inline"`, parse recursively
-func (p *Parser) parseStructField(structTypeName string, field *types.Var, structTags string) (*schema.TypeField, error) {
+func (p *Parser) parseStructField(structTypeName string, field *types.Var, jsonTag JsonTag) (*schema.TypeField, error) {
 	fieldName := field.Name()
 	fieldType := field.Type()
 
@@ -68,48 +72,43 @@ func (p *Parser) parseStructField(structTypeName string, field *types.Var, struc
 
 	goFieldImport := p.GoTypeImport(fieldType)
 
-	jsonTag, ok := GetJsonTag(structTags)
-	if ok {
+	if jsonTag.Name != "" {
 		if jsonTag.Name == "-" { // struct field ignored by `json:"-"` struct tag
 			return nil, nil
 		}
+		jsonFieldName = jsonTag.Name
+	}
 
-		if jsonTag.Name != "" {
-			jsonFieldName = jsonTag.Name
-		}
-
+	if jsonTag.Omitempty {
 		optional = jsonTag.Omitempty
-		if optional {
-			goFieldType = "*" + goFieldType
+		goFieldType = "*" + goFieldType
+	}
+
+	if jsonTag.IsString { // struct field forced to be string by `json:",string"`
+		structField := &schema.TypeField{
+			Name: jsonFieldName,
+			Type: &schema.VarType{
+				Expr: "string",
+				Type: schema.T_String,
+			},
+			TypeExtra: schema.TypeExtra{
+				Meta: []schema.TypeFieldMeta{
+					{"go.field.name": fieldName},
+					{"go.field.type": goFieldType},
+				},
+				Optional: optional,
+			},
 		}
-
-		if jsonTag.IsString { // struct field forced to be string by `json:",string"`
-
-			structField := &schema.TypeField{
-				Name: jsonFieldName,
-				Type: &schema.VarType{
-					Expr: "string",
-					Type: schema.T_String,
-				},
-				TypeExtra: schema.TypeExtra{
-					Meta: []schema.TypeFieldMeta{
-						{"go.field.name": fieldName},
-						{"go.field.type": goFieldType},
-					},
-					Optional: optional,
-				},
-			}
-			if goFieldImport != "" {
-				structField.TypeExtra.Meta = append(structField.TypeExtra.Meta,
-					schema.TypeFieldMeta{"go.type.import": goFieldImport},
-				)
-			}
+		if goFieldImport != "" {
 			structField.TypeExtra.Meta = append(structField.TypeExtra.Meta,
-				schema.TypeFieldMeta{"go.tag.json": jsonTag.Value},
+				schema.TypeFieldMeta{"go.type.import": goFieldImport},
 			)
-
-			return structField, nil
 		}
+		structField.TypeExtra.Meta = append(structField.TypeExtra.Meta,
+			schema.TypeFieldMeta{"go.tag.json": jsonTag.Value},
+		)
+
+		return structField, nil
 	}
 
 	if _, ok := field.Type().Underlying().(*types.Pointer); ok {
