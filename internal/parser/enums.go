@@ -18,13 +18,11 @@ import (
 //	// new      = 3
 //	type Status gospeak.Enum[int]
 func (p *Parser) CollectEnums() error {
-
 	debug := spew.NewDefaultConfig()
 	debug.DisableMethods = true
 	debug.DisablePointerAddresses = true
 	debug.Indent = "\t"
 	debug.SortKeys = true
-	//panic(debug.Sdump(p.Pkg.Syntax))
 
 	gospeakImportFound := false
 	for _, file := range p.Pkg.Syntax {
@@ -49,8 +47,6 @@ func (p *Parser) CollectEnums() error {
 			if typeDeclaration, ok := decl.(*ast.GenDecl); ok && typeDeclaration.Tok == token.TYPE {
 				for _, spec := range typeDeclaration.Specs {
 					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
-						//panic(debug.Sdump(typeSpec))
-
 						selExpr, ok := typeSpec.Type.(*ast.SelectorExpr)
 						if !ok {
 							continue
@@ -108,6 +104,7 @@ func (p *Parser) CollectEnums() error {
 						}
 
 						p.Schema.Types = append(p.Schema.Types, enumType)
+						p.ParsedEnumTypes[fmt.Sprintf("%v.%v", p.Pkg.PkgPath, enumName)] = enumType
 					}
 				}
 			}

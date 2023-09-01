@@ -45,6 +45,16 @@ func (p *Parser) ParseNamedType(typeName string, typ types.Type) (varType *schem
 			}
 		}
 
+		if enum, ok := p.ParsedEnumTypes[typ.String()]; ok {
+			fmt.Printf("%#v", enum.Name)
+			// TODO(webrpc): Currently, the enum.Type holds the underlying backend
+			// type (ie. int64) but instead we want the "string" type in JSON.
+			return &schema.VarType{
+				Expr: enum.Name,
+				Type: schema.T_String,
+			}, nil
+		}
+
 		// If the type implements encoding.TextMarshaler, it's a string.
 		if isTextMarshaler(v, pkg) {
 			return &schema.VarType{
@@ -85,9 +95,10 @@ func (p *Parser) ParseNamedType(typeName string, typ types.Type) (varType *schem
 			}
 
 			var elem types.Type
-			//                  = u.Elem().Underlying()
-			// NOTE: Calling the above assignment fails to build with this error:
-			//       "u.Elem undefined (type types.Type has no field or method Elem)"
+			// NOTE: As of Go 1.21, the following assignment
+			//         var elem types.Type = u.Elem().Underlying()
+			//       fails with syntax error:
+			//         "u.Elem undefined (type types.Type has no field or method Elem)"
 			//       even though both *types.Slice and *types.Array have the .Elem() method.
 			switch underlyingElem := u.(type) {
 			case *types.Slice:

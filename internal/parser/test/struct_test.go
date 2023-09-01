@@ -133,23 +133,9 @@ func testParser(srcCode string) (*parser.Parser, error) {
 
 	_, _ = gospeak.CollectInterfaces(pkg)
 
-	p := &parser.Parser{
-		Schema: &schema.WebRPCSchema{
-			WebrpcVersion: "v1",
-			SchemaName:    "TestAPI",
-			SchemaVersion: "v0.0.1",
-		},
-		SchemaPkgName:   pkg.PkgPath,
-		ParsedTypes:     map[types.Type]*schema.VarType{},
-		ParsedTypeNames: map[string]struct{}{},
-		Pkg:             pkg,
-
-		// TODO: Change this to map[*types.Package]string so we can rename duplicated pkgs?
-		ImportedPaths: map[string]struct{}{
-			// Initial Schema file's package name artificially set by golang.org/x/tools/go/packages.
-			"command-line-arguments": {},
-		},
-	}
+	p := parser.New(pkg)
+	p.Schema.SchemaName = "TestAPI"
+	p.Schema.SchemaVersion = "v0.0.1"
 
 	return p, nil
 }

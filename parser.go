@@ -101,23 +101,8 @@ func Parse(filePath string) ([]*Target, error) {
 		}
 
 		// Miss.
-		p := &parser.Parser{
-			Schema: &schema.WebRPCSchema{
-				WebrpcVersion: "v1",
-				SchemaName:    target.InterfaceName,
-				SchemaVersion: "vTODO",
-			},
-			SchemaPkgName:   pkg.PkgPath,
-			ParsedTypes:     map[types.Type]*schema.VarType{},
-			ParsedTypeNames: map[string]struct{}{},
-			Pkg:             pkg,
-
-			// TODO: Change this to map[*types.Package]string so we can rename duplicated pkgs?
-			ImportedPaths: map[string]struct{}{
-				// Initial schema file's package name artificially set by golang.org/x/tools/go/packages.
-				"command-line-arguments": {},
-			},
-		}
+		p := parser.New(pkg)
+		p.Schema.SchemaName = target.InterfaceName
 
 		if err := p.CollectEnums(); err != nil {
 			return nil, fmt.Errorf("collecting enums: %w", err)
