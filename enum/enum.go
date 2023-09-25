@@ -1,15 +1,5 @@
 package enum
 
-// type Enum[T EnumType] T
-//
-// type EnumType interface {
-//	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~string
-// }
-//
-// NOTE: The generic Enum type didn't work, as it failed with:
-// "cannot use a type parameter as RHS in type declaration"
-// https://github.com/golang/go/issues/45639
-
 type Int int
 type Uint uint
 
@@ -27,3 +17,13 @@ type Uint64 uint64
 
 // webrpc TODO: string ENUM
 // https://github.com/webrpc/webrpc/issues/203
+
+// NOTE: Don't use generic Enum type. It failed with:
+// "cannot use a type parameter as RHS in type declaration"
+// https://github.com/golang/go/issues/45639
+//
+// type Enum[T EnumType] T
+//
+// type EnumType interface {
+//	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~string
+// }

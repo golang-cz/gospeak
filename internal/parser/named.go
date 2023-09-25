@@ -46,7 +46,6 @@ func (p *Parser) ParseNamedType(typeName string, typ types.Type) (varType *schem
 		}
 
 		if enum, ok := p.ParsedEnumTypes[typ.String()]; ok {
-			fmt.Printf("%#v", enum.Name)
 			// TODO(webrpc): Currently, the enum.Type holds the underlying backend
 			// type (ie. int64) but instead we want the "string" type in JSON.
 			return &schema.VarType{
