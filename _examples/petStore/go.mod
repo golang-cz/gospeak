@@ -31,7 +31,7 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749 // indirect
 	github.com/src-d/gcfg v1.4.0 // indirect
-	github.com/webrpc/webrpc v0.12.1 // indirect
+	github.com/webrpc/webrpc v0.13.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.2 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
