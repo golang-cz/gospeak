@@ -1263,7 +1263,12 @@
 								}),
 								Optional: (bool) false,
 								InputArg: (bool) true,
-								OutputArg: (bool) false
+								OutputArg: (bool) false,
+								TypeExtra: (schema.TypeExtra) {
+									Optional: (bool) false,
+									Value: (string) "",
+									Meta: ([]schema.TypeFieldMeta) <nil>
+								}
 							})
 						},
 						Outputs: ([]*schema.MethodArgument) (len=1 cap=2) {
@@ -1842,7 +1847,12 @@
 								}),
 								Optional: (bool) false,
 								InputArg: (bool) false,
-								OutputArg: (bool) true
+								OutputArg: (bool) true,
+								TypeExtra: (schema.TypeExtra) {
+									Optional: (bool) false,
+									Value: (string) "",
+									Meta: ([]schema.TypeFieldMeta) <nil>
+								}
 							})
 						},
 						Service: (*schema.Service)(<already shown>)
@@ -1864,7 +1874,12 @@
 								}),
 								Optional: (bool) false,
 								InputArg: (bool) true,
-								OutputArg: (bool) false
+								OutputArg: (bool) false,
+								TypeExtra: (schema.TypeExtra) {
+									Optional: (bool) false,
+									Value: (string) "",
+									Meta: ([]schema.TypeFieldMeta) <nil>
+								}
 							})
 						},
 						Outputs: ([]*schema.MethodArgument) (cap=1) {
@@ -1888,7 +1903,12 @@
 								}),
 								Optional: (bool) false,
 								InputArg: (bool) true,
-								OutputArg: (bool) false
+								OutputArg: (bool) false,
+								TypeExtra: (schema.TypeExtra) {
+									Optional: (bool) false,
+									Value: (string) "",
+									Meta: ([]schema.TypeFieldMeta) <nil>
+								}
 							})
 						},
 						Outputs: ([]*schema.MethodArgument) (len=1 cap=2) {
@@ -2467,7 +2487,12 @@
 								}),
 								Optional: (bool) false,
 								InputArg: (bool) false,
-								OutputArg: (bool) true
+								OutputArg: (bool) true,
+								TypeExtra: (schema.TypeExtra) {
+									Optional: (bool) false,
+									Value: (string) "",
+									Meta: ([]schema.TypeFieldMeta) <nil>
+								}
 							})
 						},
 						Service: (*schema.Service)(<already shown>)
@@ -3063,7 +3088,12 @@
 								}),
 								Optional: (bool) false,
 								InputArg: (bool) false,
-								OutputArg: (bool) true
+								OutputArg: (bool) true,
+								TypeExtra: (schema.TypeExtra) {
+									Optional: (bool) false,
+									Value: (string) "",
+									Meta: ([]schema.TypeFieldMeta) <nil>
+								}
 							})
 						},
 						Service: (*schema.Service)(<already shown>)
@@ -3085,7 +3115,12 @@
 								}),
 								Optional: (bool) false,
 								InputArg: (bool) true,
-								OutputArg: (bool) false
+								OutputArg: (bool) false,
+								TypeExtra: (schema.TypeExtra) {
+									Optional: (bool) false,
+									Value: (string) "",
+									Meta: ([]schema.TypeFieldMeta) <nil>
+								}
 							}),
 							(*schema.MethodArgument)({
 								Name: (string) (len=6) "update",
@@ -3662,7 +3697,12 @@
 								}),
 								Optional: (bool) false,
 								InputArg: (bool) true,
-								OutputArg: (bool) false
+								OutputArg: (bool) false,
+								TypeExtra: (schema.TypeExtra) {
+									Optional: (bool) false,
+									Value: (string) "",
+									Meta: ([]schema.TypeFieldMeta) <nil>
+								}
 							})
 						},
 						Outputs: ([]*schema.MethodArgument) (len=1 cap=2) {
@@ -4241,7 +4281,12 @@
 								}),
 								Optional: (bool) false,
 								InputArg: (bool) false,
-								OutputArg: (bool) true
+								OutputArg: (bool) true,
+								TypeExtra: (schema.TypeExtra) {
+									Optional: (bool) false,
+									Value: (string) "",
+									Meta: ([]schema.TypeFieldMeta) <nil>
+								}
 							})
 						},
 						Service: (*schema.Service)(<already shown>)
@@ -4253,7 +4298,7 @@
 		Deprecated_Messages: ([]interface {}) <nil>
 	}),
 	SchemaHash: (string) (len=40) "204f6b26587305ef3a4c043b8636035ada3889ef",
-	WebrpcGenVersion: (string) (len=11) "v0.13.0-dev",
+	WebrpcGenVersion: (string) (len=11) "v0.14.0-dev",
 	WebrpcGenCommand: (string) (len=9) "gospeak .",
 	WebrpcTarget: (string) (len=5) "debug",
 	WebrpcErrors: ([]*schema.Error) (len=8 cap=8) {
