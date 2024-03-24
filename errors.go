@@ -35,11 +35,15 @@ func (e WebRPCError) Unwrap() error {
 	return e.cause
 }
 
-func ErrorWithCause(rpcErr WebRPCError, cause error) WebRPCError {
-	err := rpcErr
+func (e WebRPCError) WithCause(cause error) WebRPCError {
+	err := e
 	err.cause = cause
 	err.Cause = cause.Error()
 	return err
+}
+
+func (e WebRPCError) StackFrames() []uintptr {
+	return nil
 }
 
 // Webrpc errors
