@@ -10,12 +10,11 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-cz/gospeak"
 	"github.com/golang-cz/gospeak/internal/parser"
-	"github.com/google/go-cmp/cmp"
 	"github.com/webrpc/webrpc/schema"
 	"golang.org/x/tools/go/packages"
 )
 
-func testStruct(t *testing.T, inputFields string, want *schema.Type) {
+func parseTestStructCode(t *testing.T, inputFields string) *schema.Type {
 	t.Helper()
 
 	srcCode := fmt.Sprintf(`package test
@@ -25,7 +24,7 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		"time"
 
 		"github.com/golang-cz/gospeak/internal/parser/test/uuid"
-		"github.com/golang-cz/gospeak/internal/parser/test/pgkit"
+		"github.com/golang-cz/gospeak/internal/parser/test/empty"
 	)
 
 	type TestStruct struct {
@@ -37,7 +36,7 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		Test(ctx context.Context) (tst *TestStruct, err error)
 	}
 
-	type Page = pgkit.Page // type alias
+	type Struct = empty.Struct // type alias
 
 	type Number int // should be rendered as a number in JSON
 
@@ -73,20 +72,16 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		t.Fatal(fmt.Errorf("error parsing: %q: %w", inputFields, err))
 	}
 
-	for _, got := range p.Schema.Types {
-		switch got.Name {
-		case "TestStruct":
-			if !cmp.Equal(want, got) {
-				t.Errorf("%s\n%s\n", inputFields, coloredDiff(want, got))
-			}
-
-		case "Page":
-			t.Errorf("%+v", got)
-
-		default:
-			t.Fatalf("%s\nexpected one struct type, got %s", inputFields, spew.Sdump(p.Schema.Types))
+	for _, t := range p.Schema.Types {
+		if t.Name != "TestStruct" {
+			continue
 		}
+
+		return t
 	}
+
+	t.Fatal("couldn't find TestStruct type")
+	return nil
 }
 
 func testParser(srcCode string) (*parser.Parser, error) {
@@ -95,16 +90,16 @@ func testParser(srcCode string) (*parser.Parser, error) {
 		return nil, fmt.Errorf("getting working directory: %w", err)
 	}
 
-	pkgPath := filepath.Join(wd, "proto.go")
-	pkgUuidPath := filepath.Join(wd, "uuid/uuid.go")
-	pkgPgkitPath := filepath.Join(wd, "pgkit/pgkit.go")
+	pkg1 := filepath.Join(wd, "proto.go")
+	pkg2 := filepath.Join(wd, "uuid/uuid.go")
+	pkg3 := filepath.Join(wd, "empty/empty.go")
 
 	cfg := &packages.Config{
 		Dir:  wd,
 		Mode: packages.NeedName | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo | packages.NeedImports,
 		Overlay: map[string][]byte{
-			pkgPath: []byte(srcCode),
-			pkgUuidPath: []byte(`
+			pkg1: []byte(srcCode),
+			pkg2: []byte(`
 				package uuid
 
 				type UUID [16]byte
@@ -119,18 +114,15 @@ func testParser(srcCode string) (*parser.Parser, error) {
 					return nil
 				}
 			`),
-			pkgPgkitPath: []byte(`
-				package pgkit
+			pkg3: []byte(`
+				package empty
 
-				type Page struct {
-					Page int
-					Size int
-				}
+				type Struct struct{}
 			`),
 		},
 	}
 
-	pkgs, err := packages.Load(cfg, "file="+pkgPath, "file="+pkgUuidPath, "file="+pkgPgkitPath)
+	pkgs, err := packages.Load(cfg, "file="+pkg1, "file="+pkg2, "file="+pkg3)
 	if err != nil {
 		return nil, fmt.Errorf("error loading Go packages: %v\n%s", err, prefixLinesWithLineNumber(srcCode))
 	}

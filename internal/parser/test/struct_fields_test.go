@@ -3,6 +3,7 @@ package test
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/webrpc/webrpc/schema"
 )
 
@@ -18,6 +19,8 @@ func TestStructFieldJsonTags(t *testing.T) {
 		goType   string
 		goImport string
 		optional bool
+
+		Struct *schema.VarStructType
 	}
 
 	tt := []struct {
@@ -96,6 +99,18 @@ func TestStructFieldJsonTags(t *testing.T) {
 				goImport: "github.com/golang-cz/gospeak/internal/parser/test/uuid",
 			},
 		},
+		{
+			in: "Struct empty.Struct",
+			out: &field{
+				name:     "Struct",
+				expr:     "Struct",
+				t:        schema.T_Struct,
+				goName:   "Struct",
+				goType:   "empty.Struct",
+				goImport: "github.com/golang-cz/gospeak/internal/parser/test/empty",
+				Struct:   &schema.VarStructType{Name: "Struct", Type: &schema.Type{Kind: "struct", Name: "Struct"}},
+			},
+		},
 		//{
 		//	in:  "Embedded",
 		//	out: &field{name: "Embedded", expr: "Embedded", t: schema.T_Struct, goName: "Embedded", goType: "Embedded"},
@@ -113,8 +128,9 @@ func TestStructFieldJsonTags(t *testing.T) {
 				&schema.TypeField{
 					Name: tc.out.name,
 					Type: &schema.VarType{
-						Expr: tc.out.expr,
-						Type: tc.out.t,
+						Expr:   tc.out.expr,
+						Type:   tc.out.t,
+						Struct: tc.out.Struct,
 					},
 					TypeExtra: schema.TypeExtra{
 						Optional: tc.out.optional,
@@ -133,14 +149,17 @@ func TestStructFieldJsonTags(t *testing.T) {
 			}
 		}
 
-		testStruct(t,
-			tc.in,
-			&schema.Type{
-				Kind:   "struct",
-				Name:   "TestStruct",
-				Fields: fields,
-			},
-		)
+		want := &schema.Type{
+			Kind:   "struct",
+			Name:   "TestStruct",
+			Fields: fields,
+		}
+
+		got := parseTestStructCode(t, tc.in)
+
+		if !cmp.Equal(want, got) {
+			t.Errorf("%s\n%s\n", tc.in, coloredDiff(want, got))
+		}
 	}
 }
 
@@ -168,34 +187,37 @@ func TestStructSliceField(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		testStruct(t,
-			tc.in,
-			&schema.Type{
-				Kind: "struct",
-				Name: "TestStruct",
-				Fields: []*schema.TypeField{
-					&schema.TypeField{
-						Name: tc.out.name,
-						Type: &schema.VarType{
-							Expr: "[]" + tc.out.elemExpr,
-							Type: schema.T_List,
-							List: &schema.VarListType{
-								Elem: &schema.VarType{
-									Expr: tc.out.elemExpr,
-									Type: tc.out.elemT,
-								},
+		want := &schema.Type{
+			Kind: "struct",
+			Name: "TestStruct",
+			Fields: []*schema.TypeField{
+				&schema.TypeField{
+					Name: tc.out.name,
+					Type: &schema.VarType{
+						Expr: "[]" + tc.out.elemExpr,
+						Type: schema.T_List,
+						List: &schema.VarListType{
+							Elem: &schema.VarType{
+								Expr: tc.out.elemExpr,
+								Type: tc.out.elemT,
 							},
 						},
-						TypeExtra: schema.TypeExtra{
-							Optional: tc.out.optional,
-							Meta: []schema.TypeFieldMeta{
-								{"go.field.name": tc.out.goName},
-								{"go.field.type": tc.out.goType},
-							},
+					},
+					TypeExtra: schema.TypeExtra{
+						Optional: tc.out.optional,
+						Meta: []schema.TypeFieldMeta{
+							{"go.field.name": tc.out.goName},
+							{"go.field.type": tc.out.goType},
 						},
 					},
 				},
 			},
-		)
+		}
+
+		got := parseTestStructCode(t, tc.in)
+
+		if !cmp.Equal(want, got) {
+			t.Errorf("%s\n%s\n", tc.in, coloredDiff(want, got))
+		}
 	}
 }
