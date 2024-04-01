@@ -25,6 +25,7 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		"time"
 
 		"github.com/golang-cz/gospeak/internal/parser/test/uuid"
+		"github.com/golang-cz/gospeak/internal/parser/test/pgkit"
 	)
 
 	type TestStruct struct {
@@ -36,9 +37,11 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 		Test(ctx context.Context) (tst *TestStruct, err error)
 	}
 
-	type Number int // should be number over JSON
+	type Page = pgkit.Page // type alias
 
-	type Locale int // implements MarshalText(), should be string over JSON
+	type Number int // should be rendered as a number in JSON
+
+	type Locale int // implements MarshalText(), should be rendered as a string in JSON
 
 	// MarshalText implements encoding.TextMarshaler.
 	func (locale Locale) MarshalText() ([]byte, error) {
@@ -61,25 +64,29 @@ func testStruct(t *testing.T, inputFields string, want *schema.Type) {
 	var _ Locale
 	`, inputFields)
 
-	p, err := testStructParser(srcCode)
+	p, err := testParser(srcCode)
 	if err != nil {
+		t.Fatal(fmt.Errorf("error creating test parser: %w", err))
+	}
+
+	if err := parseTestStruct(p); err != nil {
 		t.Fatal(fmt.Errorf("error parsing: %q: %w", inputFields, err))
 	}
 
 	for _, got := range p.Schema.Types {
-		if got.Name != "TestStruct" {
-			continue
-		}
+		switch got.Name {
+		case "TestStruct":
+			if !cmp.Equal(want, got) {
+				t.Errorf("%s\n%s\n", inputFields, coloredDiff(want, got))
+			}
 
-		if !cmp.Equal(want, got) {
-			t.Errorf("%s\n%s\n", inputFields, coloredDiff(want, got))
-		}
+		case "Page":
+			t.Errorf("%+v", got)
 
-		return // success
+		default:
+			t.Fatalf("%s\nexpected one struct type, got %s", inputFields, spew.Sdump(p.Schema.Types))
+		}
 	}
-
-	t.Fatalf("%s\nexpected one struct type, got %s", inputFields, spew.Sdump(p.Schema.Types))
-	return
 }
 
 func testParser(srcCode string) (*parser.Parser, error) {
@@ -88,15 +95,16 @@ func testParser(srcCode string) (*parser.Parser, error) {
 		return nil, fmt.Errorf("getting working directory: %w", err)
 	}
 
-	package1Path := filepath.Join(wd, "proto.go")
-	package2Path := filepath.Join(wd, "uuid/uuid.go")
+	pkgPath := filepath.Join(wd, "proto.go")
+	pkgUuidPath := filepath.Join(wd, "uuid/uuid.go")
+	pkgPgkitPath := filepath.Join(wd, "pgkit/pgkit.go")
 
 	cfg := &packages.Config{
 		Dir:  wd,
 		Mode: packages.NeedName | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo | packages.NeedImports,
 		Overlay: map[string][]byte{
-			package1Path: []byte(srcCode),
-			package2Path: []byte(`
+			pkgPath: []byte(srcCode),
+			pkgUuidPath: []byte(`
 				package uuid
 
 				type UUID [16]byte
@@ -111,10 +119,18 @@ func testParser(srcCode string) (*parser.Parser, error) {
 					return nil
 				}
 			`),
+			pkgPgkitPath: []byte(`
+				package pgkit
+
+				type Page struct {
+					Page int
+					Size int
+				}
+			`),
 		},
 	}
 
-	pkgs, err := packages.Load(cfg, "file="+package1Path, "file="+package2Path)
+	pkgs, err := packages.Load(cfg, "file="+pkgPath, "file="+pkgUuidPath, "file="+pkgPgkitPath)
 	if err != nil {
 		return nil, fmt.Errorf("error loading Go packages: %v\n%s", err, prefixLinesWithLineNumber(srcCode))
 	}
@@ -125,7 +141,7 @@ func testParser(srcCode string) (*parser.Parser, error) {
 		}
 	}
 
-	if len(pkgs) != 2 {
+	if len(pkgs) != 3 {
 		return nil, fmt.Errorf("expected 2 Go packages, got %v\n%s", len(pkgs), spew.Sdump(pkgs))
 	}
 
@@ -140,29 +156,23 @@ func testParser(srcCode string) (*parser.Parser, error) {
 	return p, nil
 }
 
-// Parses code with TestStruct type.
-func testStructParser(srcCode string) (*parser.Parser, error) {
-	p, err := testParser(srcCode)
-	if err != nil {
-		return nil, err
-	}
-
+func parseTestStruct(p *parser.Parser) error {
 	scope := p.Pkg.Types.Scope()
 
 	obj := scope.Lookup("TestStruct")
 	if obj == nil {
-		return nil, fmt.Errorf("type TestStruct not defined")
+		return fmt.Errorf("type TestStruct not defined")
 	}
 
 	testStruct, ok := obj.Type().Underlying().(*types.Struct)
 	if !ok {
-		return nil, fmt.Errorf("type TestStruct is %T", obj.Type().Underlying())
+		return fmt.Errorf("type TestStruct is %T", obj.Type().Underlying())
 	}
 
-	_, err = p.ParseStruct("TestStruct", testStruct)
+	_, err := p.ParseStruct("TestStruct", testStruct)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse struct TestStruct: %w", err)
+		return fmt.Errorf("failed to parse struct TestStruct: %w", err)
 	}
 
-	return p, nil
+	return nil
 }

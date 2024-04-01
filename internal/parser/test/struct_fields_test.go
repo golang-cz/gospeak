@@ -85,8 +85,16 @@ func TestStructFieldJsonTags(t *testing.T) {
 			out: &field{name: "ID", expr: "string", t: schema.T_String, goName: "ID", goType: "uuid.UUID", goImport: "github.com/golang-cz/gospeak/internal/parser/test/uuid"},
 		},
 		{
-			in:  "ID uuid.UUID `json:\",string\"`", // string type in JSON
-			out: &field{name: "ID", expr: "string", t: schema.T_String, jsonTag: ",string", goName: "ID", goType: "uuid.UUID", goImport: "github.com/golang-cz/gospeak/internal/parser/test/uuid"},
+			in: "ID uuid.UUID `json:\",string\"`", // string type in JSON
+			out: &field{
+				name:     "ID",
+				expr:     "string",
+				t:        schema.T_String,
+				jsonTag:  ",string",
+				goName:   "ID",
+				goType:   "uuid.UUID",
+				goImport: "github.com/golang-cz/gospeak/internal/parser/test/uuid",
+			},
 		},
 		//{
 		//	in:  "Embedded",
