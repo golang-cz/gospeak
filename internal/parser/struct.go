@@ -41,7 +41,7 @@ func (p *Parser) ParseStruct(goTypeName string, structTyp *types.Struct) (*schem
 			continue
 		}
 
-		field, err := p.parseStructField(goTypeName+"Field", structField, jsonTag)
+		field, err := p.parseStructField(structField, jsonTag)
 		if err != nil {
 			return nil, fmt.Errorf("parsing struct field %v: %w", i, err)
 		}
@@ -64,7 +64,7 @@ func (p *Parser) ParseStruct(goTypeName string, structTyp *types.Struct) (*schem
 
 // parses single Go struct field
 // if the field is embedded, ie. `json:",inline"`, parse recursively
-func (p *Parser) parseStructField(structTypeName string, field *types.Var, jsonTag JsonTag) (*schema.TypeField, error) {
+func (p *Parser) parseStructField(field *types.Var, jsonTag JsonTag) (*schema.TypeField, error) {
 	fieldName := field.Name()
 	fieldType := field.Type()
 
@@ -126,7 +126,7 @@ func (p *Parser) parseStructField(structTypeName string, field *types.Var, jsonT
 		//       Name string
 		//     }
 		//   }
-		structTypeName = /*structTypeName + */ "Anonymous" + field.Name()
+		/* "Anonymous" + field.Name() */
 	}
 
 	// TODO: Can we ever see type aliases here? If so, how do you trigger this?
