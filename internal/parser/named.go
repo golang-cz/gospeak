@@ -7,7 +7,7 @@ import (
 	"github.com/webrpc/webrpc/schema"
 )
 
-func (p *Parser) ParseNamedType(typeName string, typ types.Type) (varType *schema.VarType, err error) {
+func (p *Parser) ParseNamedType(goTypeName string, typ types.Type) (varType *schema.VarType, err error) {
 	// On cache HIT, return a pointer to parsedType from cache.
 	if parsedType, ok := p.ParsedTypes[typ]; ok {
 		return parsedType, nil
@@ -19,7 +19,7 @@ func (p *Parser) ParseNamedType(typeName string, typ types.Type) (varType *schem
 	//
 	// Note: Since we're parsing the AST sequentially, we don't need to use mutex/sync.Map or anything.
 	cacheDoNotReturn := &schema.VarType{
-		Expr: typeName,
+		Expr: goTypeName,
 	}
 	p.ParsedTypes[typ] = cacheDoNotReturn
 
@@ -34,10 +34,10 @@ func (p *Parser) ParseNamedType(typeName string, typ types.Type) (varType *schem
 	case *types.Named:
 		pkg := v.Obj().Pkg()
 		underlying := v.Underlying()
-		typeName := p.GoTypeName(typ)
+		goTypeName := p.GoTypeName(typ)
 
 		if pkg != nil {
-			if typeName == "time.Time" {
+			if goTypeName == "time.Time" {
 				return &schema.VarType{
 					Expr: "timestamp",
 					Type: schema.T_Timestamp,
@@ -94,11 +94,6 @@ func (p *Parser) ParseNamedType(typeName string, typ types.Type) (varType *schem
 			}
 
 			var elem types.Type
-			// NOTE: As of Go 1.21, the following assignment
-			//         var elem types.Type = u.Elem().Underlying()
-			//       fails with syntax error:
-			//         "u.Elem undefined (type types.Type has no field or method Elem)"
-			//       even though both *types.Slice and *types.Array have the .Elem() method.
 			switch underlyingElem := u.(type) {
 			case *types.Slice:
 				elem = underlyingElem.Elem().Underlying()
@@ -133,29 +128,29 @@ func (p *Parser) ParseNamedType(typeName string, typ types.Type) (varType *schem
 				}, nil
 			}
 
-			return p.ParseNamedType(typeName, underlying)
+			return p.ParseNamedType(goTypeName, underlying)
 		}
 
 	case *types.Basic:
 		return p.ParseBasic(v)
 
 	case *types.Struct:
-		return p.ParseStruct(typeName, v)
+		return p.ParseStruct(goTypeName, v)
 
 	case *types.Slice:
-		return p.ParseSlice(typeName, v)
+		return p.ParseSlice(goTypeName, v)
 
 	case *types.Interface:
-		return p.ParseAny(typeName, v)
+		return p.ParseAny(goTypeName, v)
 
 	case *types.Map:
-		return p.ParseMap(typeName, v)
+		return p.ParseMap(goTypeName, v)
 
 	case *types.Pointer:
-		if typeName == "" {
+		if goTypeName == "" {
 			return p.ParseNamedType(p.GoTypeName(v), v.Elem())
 		}
-		return p.ParseNamedType(typeName, v.Elem())
+		return p.ParseNamedType(goTypeName, v.Elem())
 
 	default:
 		return nil, fmt.Errorf("unsupported argument type %T", typ)

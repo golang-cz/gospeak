@@ -7,10 +7,12 @@ import (
 	"github.com/webrpc/webrpc/schema"
 )
 
-func (p *Parser) ParseStruct(typeName string, structTyp *types.Struct) (*schema.VarType, error) {
+func (p *Parser) ParseStruct(goTypeName string, structTyp *types.Struct) (*schema.VarType, error) {
+	webrpcTypeName := p.GoTypeNameToWebrpc(goTypeName)
+
 	structType := &schema.Type{
 		Kind: "struct",
-		Name: typeName,
+		Name: webrpcTypeName,
 	}
 
 	for i := 0; i < structTyp.NumFields(); i++ {
@@ -39,7 +41,7 @@ func (p *Parser) ParseStruct(typeName string, structTyp *types.Struct) (*schema.
 			continue
 		}
 
-		field, err := p.parseStructField(typeName+"Field", structField, jsonTag)
+		field, err := p.parseStructField(goTypeName+"Field", structField, jsonTag)
 		if err != nil {
 			return nil, fmt.Errorf("parsing struct field %v: %w", i, err)
 		}
@@ -51,10 +53,10 @@ func (p *Parser) ParseStruct(typeName string, structTyp *types.Struct) (*schema.
 	p.Schema.Types = append(p.Schema.Types, structType)
 
 	return &schema.VarType{
-		Expr: typeName,
+		Expr: webrpcTypeName,
 		Type: schema.T_Struct,
 		Struct: &schema.VarStructType{
-			Name: typeName,
+			Name: webrpcTypeName,
 			Type: structType,
 		},
 	}, nil
@@ -111,12 +113,12 @@ func (p *Parser) parseStructField(structTypeName string, field *types.Var, jsonT
 		return structField, nil
 	}
 
-	if _, ok := field.Type().Underlying().(*types.Pointer); ok {
+	if _, ok := fieldType.Underlying().(*types.Pointer); ok {
 		optional = true
 		goFieldType = "*" + goFieldType
 	}
 
-	if _, ok := field.Type().Underlying().(*types.Struct); ok {
+	if _, ok := fieldType.Underlying().(*types.Struct); ok {
 		// Anonymous struct fields.
 		// Example:
 		//   type Something struct {
@@ -125,6 +127,20 @@ func (p *Parser) parseStructField(structTypeName string, field *types.Var, jsonT
 		//     }
 		//   }
 		structTypeName = /*structTypeName + */ "Anonymous" + field.Name()
+	}
+
+	// TODO: Can we ever see type aliases here? If so, how do you trigger this?
+	if named, ok := fieldType.(*types.Named); ok {
+		if named.Obj().IsAlias() {
+			panic(fmt.Sprintf("alias: %v", fieldType))
+		}
+	}
+
+	// TODO: Can we ever see type aliases here? If so, how do you trigger this?
+	if named, ok := fieldType.Underlying().(*types.Named); ok {
+		if named.Obj().IsAlias() {
+			panic(fmt.Sprintf("alias: %v", fieldType))
+		}
 	}
 
 	varType, err := p.ParseNamedType(goFieldType, fieldType)

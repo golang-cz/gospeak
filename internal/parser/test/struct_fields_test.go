@@ -100,15 +100,15 @@ func TestStructFieldJsonTags(t *testing.T) {
 			},
 		},
 		{
-			in: "Struct empty.Struct",
+			in: "Empty empty.Struct",
 			out: &field{
-				name:     "Struct",
-				expr:     "Struct",
+				name:     "Empty",
+				expr:     "emptyStruct",
 				t:        schema.T_Struct,
-				goName:   "Struct",
+				goName:   "Empty",
 				goType:   "empty.Struct",
 				goImport: "github.com/golang-cz/gospeak/internal/parser/test/empty",
-				Struct:   &schema.VarStructType{Name: "Struct", Type: &schema.Type{Kind: "struct", Name: "Struct"}},
+				Struct:   &schema.VarStructType{Name: "emptyStruct", Type: &schema.Type{Kind: "struct", Name: "emptyStruct"}},
 			},
 		},
 		//{
@@ -125,7 +125,7 @@ func TestStructFieldJsonTags(t *testing.T) {
 		var fields []*schema.TypeField
 		if tc.out != nil {
 			fields = []*schema.TypeField{
-				&schema.TypeField{
+				{
 					Name: tc.out.name,
 					Type: &schema.VarType{
 						Expr:   tc.out.expr,
@@ -155,10 +155,12 @@ func TestStructFieldJsonTags(t *testing.T) {
 			Fields: fields,
 		}
 
-		got := parseTestStructCode(t, tc.in)
+		srcCode := genCodeWithStructField("TestStruct", tc.in)
+		got := parseTestStructCode(t, srcCode)
 
 		if !cmp.Equal(want, got) {
-			t.Errorf("%s\n%s\n", tc.in, coloredDiff(want, got))
+			t.Log(srcCode)
+			t.Errorf("%s\n%s", tc.in, coloredDiff(want, got))
 		}
 	}
 }
@@ -191,7 +193,7 @@ func TestStructSliceField(t *testing.T) {
 			Kind: "struct",
 			Name: "TestStruct",
 			Fields: []*schema.TypeField{
-				&schema.TypeField{
+				{
 					Name: tc.out.name,
 					Type: &schema.VarType{
 						Expr: "[]" + tc.out.elemExpr,
@@ -214,9 +216,11 @@ func TestStructSliceField(t *testing.T) {
 			},
 		}
 
-		got := parseTestStructCode(t, tc.in)
+		srcCode := genCodeWithStructField("TestStruct", tc.in)
+		got := parseTestStructCode(t, srcCode)
 
 		if !cmp.Equal(want, got) {
+			t.Log(srcCode)
 			t.Errorf("%s\n%s\n", tc.in, coloredDiff(want, got))
 		}
 	}

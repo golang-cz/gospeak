@@ -14,10 +14,8 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-func parseTestStructCode(t *testing.T, inputFields string) *schema.Type {
-	t.Helper()
-
-	srcCode := fmt.Sprintf(`package test
+func genCodeWithStructField(structName string, inputField string) string {
+	return fmt.Sprintf(`package test
 
 	import (
 		"context"
@@ -27,7 +25,7 @@ func parseTestStructCode(t *testing.T, inputFields string) *schema.Type {
 		"github.com/golang-cz/gospeak/internal/parser/test/empty"
 	)
 
-	type TestStruct struct {
+	type %s struct {
 		%s
 	}
 	
@@ -61,26 +59,27 @@ func parseTestStructCode(t *testing.T, inputFields string) *schema.Type {
 	var _ uuid.UUID
 	var _ Number
 	var _ Locale
-	`, inputFields)
+	`, structName, inputField)
+}
+
+func parseTestStructCode(t *testing.T, srcCode string) *schema.Type {
+	t.Helper()
 
 	p, err := testParser(srcCode)
 	if err != nil {
 		t.Fatal(fmt.Errorf("error creating test parser: %w", err))
 	}
 
-	if err := parseTestStruct(p); err != nil {
-		t.Fatal(fmt.Errorf("error parsing: %q: %w", inputFields, err))
+	if err := parseStruct(p, "TestStruct"); err != nil {
+		t.Fatal(fmt.Errorf("error parsing code: %w", err))
 	}
 
 	for _, t := range p.Schema.Types {
-		if t.Name != "TestStruct" {
-			continue
+		if t.Name == "TestStruct" {
+			return t
 		}
-
-		return t
 	}
 
-	t.Fatal("couldn't find TestStruct type")
 	return nil
 }
 
@@ -148,22 +147,22 @@ func testParser(srcCode string) (*parser.Parser, error) {
 	return p, nil
 }
 
-func parseTestStruct(p *parser.Parser) error {
+func parseStruct(p *parser.Parser, name string) error {
 	scope := p.Pkg.Types.Scope()
 
-	obj := scope.Lookup("TestStruct")
+	obj := scope.Lookup(name)
 	if obj == nil {
-		return fmt.Errorf("type TestStruct not defined")
+		return fmt.Errorf("type %s not defined", name)
 	}
 
 	testStruct, ok := obj.Type().Underlying().(*types.Struct)
 	if !ok {
-		return fmt.Errorf("type TestStruct is %T", obj.Type().Underlying())
+		return fmt.Errorf("type %s is %T, expected struct", name, obj.Type().Underlying())
 	}
 
-	_, err := p.ParseStruct("TestStruct", testStruct)
+	_, err := p.ParseStruct(name, testStruct)
 	if err != nil {
-		return fmt.Errorf("failed to parse struct TestStruct: %w", err)
+		return fmt.Errorf("failed to parse struct %s: %w", name, err)
 	}
 
 	return nil
