@@ -7,8 +7,8 @@ import (
 	"github.com/webrpc/webrpc/schema"
 )
 
-func (p *Parser) ParseSlice(typeName string, sliceTyp *types.Slice) (*schema.VarType, error) {
-	elem, err := p.ParseNamedType(typeName, sliceTyp.Elem())
+func (p *Parser) ParseSlice(parent *types.Named, sliceTyp *types.Slice) (*schema.VarType, error) {
+	elem, err := p.ParseNamedType(parent, sliceTyp.Elem())
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse slice type: %w", err)
 	}

@@ -7,12 +7,21 @@ import (
 	"github.com/webrpc/webrpc/schema"
 )
 
-func (p *Parser) ParseStruct(goTypeName string, structTyp *types.Struct) (*schema.VarType, error) {
-	webrpcTypeName := p.GoTypeNameToWebrpc(goTypeName)
+func (p *Parser) ParseStruct(parent *types.Named, structTyp *types.Struct) (*schema.VarType, error) {
+	webrpcTypeName := p.WebrpcTypeName(parent)
 
 	structType := &schema.Type{
 		Kind: "struct",
 		Name: webrpcTypeName,
+		// NOTE: Webrpc (templates) don't allow annotating structs right now -- perhaps we can change allow it?
+		//
+		// TypeExtra: schema.TypeExtra{
+		// 	Meta: []schema.TypeFieldMeta{
+		// 		{"go.field.name": goTypeName},
+		// 		{"go.type": goTypeName},
+		// 	},
+		// 	//Optional: optional,
+		// },
 	}
 
 	for i := 0; i < structTyp.NumFields(); i++ {
@@ -28,7 +37,7 @@ func (p *Parser) ParseStruct(goTypeName string, structTyp *types.Struct) (*schem
 		}
 
 		if structField.Embedded() || jsonTag.Inline {
-			varType, err := p.ParseNamedType("", structField.Type())
+			varType, err := p.ParseNamedType(parent, structField.Type())
 			if err != nil {
 				return nil, fmt.Errorf("parsing var %v: %w", structField.Name(), err)
 			}
@@ -41,10 +50,11 @@ func (p *Parser) ParseStruct(goTypeName string, structTyp *types.Struct) (*schem
 			continue
 		}
 
-		field, err := p.parseStructField(structField, jsonTag)
+		field, err := p.parseStructField(parent, structField, jsonTag)
 		if err != nil {
 			return nil, fmt.Errorf("parsing struct field %v: %w", i, err)
 		}
+
 		if field != nil {
 			structType.Fields = appendOrOverrideExistingField(structType.Fields, field)
 		}
@@ -64,7 +74,7 @@ func (p *Parser) ParseStruct(goTypeName string, structTyp *types.Struct) (*schem
 
 // parses single Go struct field
 // if the field is embedded, ie. `json:",inline"`, parse recursively
-func (p *Parser) parseStructField(field *types.Var, jsonTag JsonTag) (*schema.TypeField, error) {
+func (p *Parser) parseStructField(parent *types.Named, field *types.Var, jsonTag JsonTag) (*schema.TypeField, error) {
 	fieldName := field.Name()
 	fieldType := field.Type()
 
@@ -143,7 +153,7 @@ func (p *Parser) parseStructField(field *types.Var, jsonTag JsonTag) (*schema.Ty
 		}
 	}
 
-	varType, err := p.ParseNamedType(goFieldType, fieldType)
+	varType, err := p.ParseNamedType(parent, fieldType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse var %v: %w", field.Name(), err)
 	}

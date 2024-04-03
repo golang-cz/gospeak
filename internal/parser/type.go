@@ -8,7 +8,7 @@ import (
 )
 
 func (p *Parser) ParseType(typ types.Type) (*schema.VarType, error) {
-	return p.ParseNamedType("", typ)
+	return p.ParseNamedType(nil, typ)
 }
 
 func (p *Parser) ParseBasic(typ *types.Basic) (*schema.VarType, error) {

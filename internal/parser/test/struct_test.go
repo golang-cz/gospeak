@@ -155,12 +155,16 @@ func parseStruct(p *parser.Parser, name string) error {
 		return fmt.Errorf("type %s not defined", name)
 	}
 
+	parent, ok := obj.Type().(*types.Named)
+	if !ok {
+		return fmt.Errorf("type %s is %T, expected named struct", name, obj.Type())
+	}
 	testStruct, ok := obj.Type().Underlying().(*types.Struct)
 	if !ok {
 		return fmt.Errorf("type %s is %T, expected struct", name, obj.Type().Underlying())
 	}
 
-	_, err := p.ParseStruct(name, testStruct)
+	_, err := p.ParseStruct(parent, testStruct)
 	if err != nil {
 		return fmt.Errorf("failed to parse struct %s: %w", name, err)
 	}

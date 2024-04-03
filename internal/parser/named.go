@@ -7,7 +7,7 @@ import (
 	"github.com/webrpc/webrpc/schema"
 )
 
-func (p *Parser) ParseNamedType(goTypeName string, typ types.Type) (varType *schema.VarType, err error) {
+func (p *Parser) ParseNamedType(parent *types.Named, typ types.Type) (varType *schema.VarType, err error) {
 	// On cache HIT, return a pointer to parsedType from cache.
 	if parsedType, ok := p.ParsedTypes[typ]; ok {
 		return parsedType, nil
@@ -19,7 +19,7 @@ func (p *Parser) ParseNamedType(goTypeName string, typ types.Type) (varType *sch
 	//
 	// Note: Since we're parsing the AST sequentially, we don't need to use mutex/sync.Map or anything.
 	cacheDoNotReturn := &schema.VarType{
-		Expr: goTypeName,
+		Expr: p.GoTypeName(parent),
 	}
 	p.ParsedTypes[typ] = cacheDoNotReturn
 
@@ -70,7 +70,7 @@ func (p *Parser) ParseNamedType(goTypeName string, typ types.Type) (varType *sch
 			//   type NamedPtr *Obj
 
 			// Go for the underlying element type name (ie. `Obj`).
-			return p.ParseNamedType(p.GoTypeName(underlying), u.Underlying())
+			return p.ParseNamedType(v, u.Underlying())
 
 		case *types.Slice, *types.Array:
 			// Named slice/array. Webrpc can't handle that.
@@ -118,7 +118,7 @@ func (p *Parser) ParseNamedType(goTypeName string, typ types.Type) (varType *sch
 			}
 
 			// Otherwise, go for the underlying element type name (ie. `Obj`).
-			return p.ParseNamedType(p.GoTypeName(underlying), u.Underlying())
+			return p.ParseNamedType(v, u.Underlying())
 
 		default:
 			if isJsonMarshaller(v, pkg) {
@@ -128,29 +128,26 @@ func (p *Parser) ParseNamedType(goTypeName string, typ types.Type) (varType *sch
 				}, nil
 			}
 
-			return p.ParseNamedType(goTypeName, underlying)
+			return p.ParseNamedType(v, underlying)
 		}
 
 	case *types.Basic:
 		return p.ParseBasic(v)
 
 	case *types.Struct:
-		return p.ParseStruct(goTypeName, v)
+		return p.ParseStruct(parent, v)
 
 	case *types.Slice:
-		return p.ParseSlice(goTypeName, v)
+		return p.ParseSlice(parent, v)
 
 	case *types.Interface:
-		return p.ParseAny(goTypeName, v)
+		return p.ParseAny(parent, v)
 
 	case *types.Map:
-		return p.ParseMap(goTypeName, v)
+		return p.ParseMap(parent, v)
 
 	case *types.Pointer:
-		if goTypeName == "" {
-			return p.ParseNamedType(p.GoTypeName(v), v.Elem())
-		}
-		return p.ParseNamedType(goTypeName, v.Elem())
+		return p.ParseNamedType(parent, v.Elem())
 
 	default:
 		return nil, fmt.Errorf("unsupported argument type %T", typ)

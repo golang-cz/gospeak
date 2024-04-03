@@ -9,12 +9,16 @@ import (
 )
 
 func (p *Parser) GoTypeName(typ types.Type) string {
+	if typ == nil {
+		return ""
+	}
+
 	name := typ.String() // []*github.com/golang-cz/gospeak/pkg.Typ
 
 	if typNamed, ok := typ.(*types.Named); ok {
 		// Versioned packages.
 		// github.com/gofrs/uuid/v5.UUID => // github.com/gofrs/uuid.UUID
-		if typNamed.Obj().Pkg() != nil {
+		if typNamed != nil && typNamed.Obj().Pkg() != nil {
 			if !strings.Contains(name, typNamed.Obj().Pkg().Name()+".") {
 				name = strings.ReplaceAll(name, typNamed.Obj().Type().String(), typNamed.Obj().Pkg().Name()+"."+typNamed.Obj().Name())
 			}
@@ -58,10 +62,11 @@ func (p *Parser) GoTypeImport(typ types.Type) string {
 	return name
 }
 
-func (p *Parser) GoTypeNameToWebrpc(typ string) string {
-	typ = strings.Trim(typ, "[]*.")
-	typ = filepath.Base(typ)
-	before, after, _ := strings.Cut(typ, ".")
+func (p *Parser) WebrpcTypeName(typ types.Type) string {
+	typeName := p.GoTypeName(typ)
+	typeName = strings.Trim(typeName, "[]*.")
+	typeName = filepath.Base(typeName)
+	before, after, _ := strings.Cut(typeName, ".")
 	return before + after
 }
 
