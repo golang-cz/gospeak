@@ -2,6 +2,7 @@ package parser
 
 import (
 	"go/types"
+	"log"
 	"path/filepath"
 	"strings"
 	"unicode"
@@ -12,6 +13,12 @@ func (p *Parser) GoTypeName(typ types.Type) string {
 	if typ == nil {
 		return ""
 	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println(r)
+		}
+	}()
 
 	name := typ.String() // []*github.com/golang-cz/gospeak/pkg.Typ
 
