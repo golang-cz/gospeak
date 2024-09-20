@@ -111,11 +111,17 @@ func (p *Parser) getMethodArguments(params *types.Tuple, isInput bool) ([]*schem
 			return nil, fmt.Errorf("failed to parse argument %v %v: %w", name, typ, err)
 		}
 
+		optional := false
+		if varType.Struct != nil && varType.Struct.Type != nil {
+			optional = true // TODO: SHould we use varType.Struct.Type.Optional instead?
+		}
+
 		arg := &schema.MethodArgument{
 			Name:      name,
 			Type:      varType,
 			InputArg:  isInput,  // denormalize/back-reference
 			OutputArg: !isInput, // denormalize/back-reference
+			Optional:  optional,
 		}
 
 		args = append(args, arg)
