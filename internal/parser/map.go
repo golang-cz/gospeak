@@ -22,7 +22,7 @@ func (p *Parser) ParseMap(typeName string, m *types.Map) (*schema.VarType, error
 		Expr: fmt.Sprintf("map<%v,%v>", key, value),
 		Type: schema.T_Map,
 		Map: &schema.VarMapType{
-			Key:   key.Type,
+			Key:   key,
 			Value: value,
 		},
 	}
