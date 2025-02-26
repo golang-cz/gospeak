@@ -30,11 +30,11 @@ GoSpeak uses [webrpc-gen](https://github.com/webrpc/webrpc) tool to generate RES
 
 | Server   | | Client                                                                                                               |
 |----------|---|----------------------------------------------------------------------------------------------------------------------|
-| Go 1.20+ | <=> | [Go 1.17+](https://github.com/webrpc/gen-golang)                                                                     |
-| Go 1.20+ | <=> | [TypeScript](https://github.com/webrpc/gen-typescript)                                                               |
-| Go 1.20+ | <=> | [JavaScript (ES6)](https://github.com/webrpc/gen-javascript)                                                         |
-| Go 1.20+ | <=> | [OpenAPI 3+](https://github.com/webrpc/gen-openapi) (Swagger documentation)                                     |
-| Go 1.20+ | <=> | Any OpenAPI client [code generator](https://github.com/webrpc/gen-openapi#generate-clientdocs-via-openapi-generator) |
+| Go 1.22+ | <=> | [Go 1.17+](https://github.com/webrpc/gen-golang)                                                                     |
+| Go 1.22+ | <=> | [TypeScript](https://github.com/webrpc/gen-typescript)                                                               |
+| Go 1.22+ | <=> | [JavaScript (ES6)](https://github.com/webrpc/gen-javascript)                                                         |
+| Go 1.22+ | <=> | [OpenAPI 3+](https://github.com/webrpc/gen-openapi) (Swagger documentation)                                     |
+| Go 1.22+ | <=> | Any OpenAPI client [code generator](https://github.com/webrpc/gen-openapi#generate-clientdocs-via-openapi-generator) |
 
 # Quick example <!-- omit in toc -->
 

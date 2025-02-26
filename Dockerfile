@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------
 # Builder
 # -----------------------------------------------------------------
-FROM golang:1.20-alpine3.16 as builder
+FROM golang:1.24-alpine3.21 as builder
 ARG VERSION
 
 RUN apk add --update git
@@ -14,7 +14,7 @@ RUN go build -ldflags="-s -w -X main.VERSION=${VERSION}" -o /usr/bin/gospeak ./c
 # -----------------------------------------------------------------
 # Runner
 # -----------------------------------------------------------------
-FROM alpine:3.16
+FROM alpine:3.21
 
 ENV TZ=UTC
 
