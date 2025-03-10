@@ -7,7 +7,7 @@ toolchain go1.24.0
 require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/google/go-cmp v0.7.0
-	github.com/webrpc/webrpc v0.23.2
+	github.com/webrpc/webrpc v0.23.4
 	golang.org/x/tools v0.30.0
 )
 
@@ -45,7 +45,7 @@ require (
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/webrpc/gen-dart v0.1.1 // indirect
-	github.com/webrpc/gen-golang v0.17.0 // indirect
+	github.com/webrpc/gen-golang v0.18.1 // indirect
 	github.com/webrpc/gen-javascript v0.13.0 // indirect
 	github.com/webrpc/gen-kotlin v0.1.0 // indirect
 	github.com/webrpc/gen-openapi v0.15.0 // indirect
