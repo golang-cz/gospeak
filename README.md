@@ -18,7 +18,7 @@ type ExampleAPI interface {
 Usage:
 
 ```
-$ go get github.com/golang-cz/gospeak/cmd/gospeak@latest
+$ go get -tool github.com/golang-cz/gospeak/cmd/gospeak@latest
 $ go generate
             ExampleAPI => ./server/server.gen.go ✓
             ExampleAPI => ./client/example.gen.go ✓
@@ -98,7 +98,7 @@ Generate TypeScript client and OpenAPI 3.x (Swagger) documentation:
 
 ## 3. Generate code
 
-Install [gospeak](https://github.com/golang-cz/gospeak/releases) and generate the webrpc code.
+Install [gospeak](https://github.com/golang-cz/gospeak/releases) and run it to generate webrpc code:
 
 ```bash
 $ gospeak ./proto/api.go
@@ -108,7 +108,19 @@ $ gospeak ./proto/api.go
             PetStore => ./client/videoDashboardClient.gen.ts ✓
 ```
 
-*NOTE: Alternatively, you can `go get github.com/golang-cz/gospeak` as your dependency and run `go generate` against `//go:generate github.com/golang-cz/gospeak/cmd/gospeak .` directive.*
+Or, install gospeak as your Go tool depenency:
+```
+go get -tool github.com/golang-cz/gospeak
+```
+and add `//go:generate github.com/golang-cz/gospeak/cmd/gospeak .` directive to your code:
+
+```bash
+$ go generate
+            PetStore => ./server/server.gen.go ✓
+            PetStore => ./client/client.gen.go ✓
+            PetStore => ./docs/videoApi.gen.yaml ✓
+            PetStore => ./client/videoDashboardClient.gen.ts ✓
+```
 
 ## 4. Mount the API server
 
