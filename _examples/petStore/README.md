@@ -1,6 +1,6 @@
 # GoSpeak userStore example
 
-1. Read/update [schema/api.go](./schema/api.go)
+1. Read and update API definition at [proto/api.go](./proto/api.go)
 2. Generate client/server code
     ```
     make generate
