@@ -14,3 +14,7 @@ run:
 
 test:
 	go test ./...
+
+swagger:
+	echo "http://localhost:8088"
+	docker run -p 8088:8080 -v $$(pwd)/proto/docs:/docs -e SWAGGER_JSON=/docs/petstore.gen.yaml swaggerapi/swagger-ui
