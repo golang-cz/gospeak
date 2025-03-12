@@ -6,7 +6,7 @@ proto: generate
 generate:
 	go generate ./...
 
-run-server:
+run:
 	@echo "Running server. You can test it with:"
 	@echo "$$ go test --serverUrl=http://localhost:8080 ./..."
 	@echo

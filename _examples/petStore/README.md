@@ -7,7 +7,7 @@
     ```
 3. Run server
     ```
-    $ make run-server
+    $ make run
     ```
 4. Run client tests
     ```
