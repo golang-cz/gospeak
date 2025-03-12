@@ -1,6 +1,8 @@
 all:
 	@awk -F'[ :]' '!/^all:/ && /^([A-z_-]+):/ {print "make " $$1}' Makefile
 
+proto: generate
+
 generate:
 	go generate ./...
 

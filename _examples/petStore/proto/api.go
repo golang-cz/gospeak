@@ -9,12 +9,12 @@ import (
 	"github.com/google/uuid"
 )
 
-//go:webrpc json -out=./petstore.gen.json
-//go:webrpc debug -out=./petstore.debug.gen.txt
-//go:webrpc golang -server -pkg=proto -json=stdlib -types=false -legacyErrors=true -out=./server.gen.go
+// -- debug: go:webrpc json -out=./petstore.gen.json
+// -- debug: go:webrpc debug -out=./petstore.debug.gen.txt
+//
+//go:webrpc golang -server -pkg=proto -json=stdlib -types=false -out=./server.gen.go
 //go:webrpc golang -client -pkg=client -json=stdlib -out=./client/petstore.gen.go
 //go:webrpc typescript -client -out=./client/petstore.gen.ts
-//go:webrpc json -out=./petstore.gen.json
 //go:webrpc openapi -out=./petstore.gen.yaml
 type PetStore interface {
 	GetPet(ctx context.Context, ID int64) (pet *Pet, err error)
