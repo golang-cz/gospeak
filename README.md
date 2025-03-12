@@ -1,50 +1,40 @@
-# GoSpeak - Generate REST APIs from Go code <!-- omit in toc -->
+***NOTICE:** Experimental. We welcome early user feedback.*
 
-***NOTICE:** Under development. Seeking early user feedback.*
+# GoSpeak <!-- omit in toc -->
 
-GoSpeak is a simple RPC framework, a lightweight alternative to [gRPC](https://grpc.io/) and [Twirp](https://twitchtv.github.io/twirp/docs/intro.html), where Go code is your protobuf.
+GoSpeak is a lightweight code generator that enables you to expose your Go methods as REST API, allowing remote execution from various programming languages, including Go and TypeScript. By generating strongly-typed HTTP clients and OpenAPI documentation, GoSpeak provides a streamlined alternative to [gRPC](https://grpc.io) for web applications, using your Go code as the source of truth and JSON as the data format.
 
-```go
-//go:generate github.com/golang-cz/gospeak/cmd/gospeak ./
-package proto
-
-//go:webrpc golang -server -pkg=server -out=./server/server.gen.go
-//go:webrpc golang -client -pkg=client -out=./client/example.gen.go
-type ExampleAPI interface {
-	Ping(context.Context, *Ping) (*Pong, error)
-}
-```
-
-Usage:
-
-```
-$ go get -tool github.com/golang-cz/gospeak/cmd/gospeak@latest
-$ go generate
-            ExampleAPI => ./server/server.gen.go ✓
-            ExampleAPI => ./client/example.gen.go ✓
-```
+| Feature                 | Description |
+|-------------------------|-------------|
+| **Remote Execution**    | Invoke Go methods remotely from any language that supports HTTP and JSON. |
+| **Code Generation**     | Generate strongly-typed HTTP clients in Go, TypeScript, and JavaScript. |
+| **OpenAPI Documentation** | Automatically generate OpenAPI 3.x (Swagger) documentation. |
+| **Framework Compatibility** | Works with `net/http`, `chi`, `gin`, and `echo`. The generated `http.Handler` integrates with existing handlers and middleware. |
+| **Web Compatibility**   | Uses standard HTTP/HTTPS with JSON, ensuring seamless integration with browsers, HTTP clients, proxies, caches, and tools like `cURL`. |
 
 ## Language support <!-- omit in toc -->
 
-GoSpeak uses [webrpc-gen](https://github.com/webrpc/webrpc) tool to generate REST API client & server code using Go templates. The API routes and JSON payload are defined per [webrpc](https://github.com/webrpc/webrpc) specs and can be exported to OpenAPI 3.x (Swagger) documentation.
+GoSpeak uses [webrpc](https://github.com/webrpc/webrpc) to generate REST API client and server code using Go templates. The API routes and JSON payload are defined per webrpc data format and can be exported to OpenAPI (Swagger) documentation.
 
-| Server   | | Client                                                                                                               |
-|----------|---|----------------------------------------------------------------------------------------------------------------------|
-| Go 1.22+ | <=> | [Go 1.17+](https://github.com/webrpc/gen-golang)                                                                     |
-| Go 1.22+ | <=> | [TypeScript](https://github.com/webrpc/gen-typescript)                                                               |
-| Go 1.22+ | <=> | [JavaScript (ES6)](https://github.com/webrpc/gen-javascript)                                                         |
-| Go 1.22+ | <=> | [OpenAPI 3+](https://github.com/webrpc/gen-openapi) (Swagger documentation)                                     |
-| Go 1.22+ | <=> | Any OpenAPI client [code generator](https://github.com/webrpc/gen-openapi#generate-clientdocs-via-openapi-generator) |
+| Language | Code Generation | Requirements |
+| -------- | --------------- | ------- |
+| [Go](https://github.com/webrpc/gen-golang) | Server and Client| Go 1.22+ |
+| [TypeScript](https://github.com/webrpc/gen-typescript) | Client |
+| [JavaScript](https://github.com/webrpc/gen-javascript) | Client | ES6 |
+| [Kotlin](https://github.com/webrpc/gen-kotlin) | Client | coroutines, moshi, ktor |
+| [Dart](https://github.com/webrpc/gen-Dar) | Client | Dart 3.1+ |
+| [OpenAPI](https://github.com/webrpc/gen-openapi) | Documentation | OpenAPI 3+ (Swagger) |
+| [OpenAPI](https://github.com/webrpc/gen-openapi#generate-clientdocs-via-openapi-generator) | Clients | See list of [code generators](https://github.com/webrpc/gen-openapi#generate-clientdocs-via-openapi-generator) |
 
 # Quick example <!-- omit in toc -->
 
 - [1. Define service API](#1-define-service-api)
-- [2. Add target language directives](#2-add-target-language-directives)
-- [3. Generate code](#3-generate-code)
-- [4. Mount the API server](#4-mount-the-api-server)
-- [5. Implement the server business logic](#5-implement-the-server-business-logic)
-- [6. Use the generated client](#6-use-the-generated-client)
-- [7. Test your API](#7-test-your-api)
+- [2. Add webrpc Target Directives](#2-add-webrpc-target-directives)
+- [3. Generate Code](#3-generate-code)
+- [4. Mount the Code-Generated http.Handler](#4-mount-the-code-generated-httphandler)
+- [5. Implement the Server Business Logic](#5-implement-the-server-business-logic)
+- [6. Use the Generated Client for Service-To-Service Communication](#6-use-the-generated-client-for-service-to-service-communication)
+- [7. Use the Generated Client in Go Tests](#7-use-the-generated-client-in-go-tests)
 
 
 ## 1. Define service API
@@ -76,9 +66,9 @@ type Tag struct {
 }
 ```
 
-## 2. Add target language directives
+## 2. Add webrpc Target Directives
 
-Generate Go server and Go client code with `go:webrpc` directives:
+The following directives will generate Go server and client code with webrpc:
 
 ```diff
 +//go:webrpc golang -server -pkg=server -out=./server/server.gen.go
@@ -86,7 +76,7 @@ Generate Go server and Go client code with `go:webrpc` directives:
  type PetStore interface {
 ```
 
-Generate TypeScript client and OpenAPI 3.x (Swagger) documentation:
+The following will add TypeScript client and OpenAPI 3.x (Swagger) documentation:
 
 ```diff
  //go:webrpc golang -server -pkg=server -out=./server/server.gen.go
@@ -96,9 +86,9 @@ Generate TypeScript client and OpenAPI 3.x (Swagger) documentation:
  type PetStore interface {
 ```
 
-## 3. Generate code
+## 3. Generate Code
 
-Install [gospeak](https://github.com/golang-cz/gospeak/releases) and run it to generate webrpc code:
+Run [gospeak](https://github.com/golang-cz/gospeak/releases) binary to generate webrpc code:
 
 ```bash
 $ gospeak ./proto/api.go
@@ -108,11 +98,15 @@ $ gospeak ./proto/api.go
             PetStore => ./client/videoDashboardClient.gen.ts ✓
 ```
 
-Or, install gospeak as your Go tool depenency:
+Alternatively, add gospeak as your tool dependency and run it via `go generate`:
+```diff
++//go:generate github.com/golang-cz/gospeak/cmd/gospeak .
+ package proto
 ```
-go get -tool github.com/golang-cz/gospeak
+
+```bash
+$ go get -tool github.com/golang-cz/gospeak
 ```
-and add `//go:generate github.com/golang-cz/gospeak/cmd/gospeak .` directive to your code:
 
 ```bash
 $ go generate
@@ -122,7 +116,7 @@ $ go generate
             PetStore => ./client/videoDashboardClient.gen.ts ✓
 ```
 
-## 4. Mount the API server
+## 4. Mount the Code-Generated http.Handler
 
 ```go
 // cmd/petstore/main.go
@@ -131,29 +125,32 @@ package main
 import "./server"
 
 func main() {
-	api := &server.Server{} // implements PetStore interface{}
+	api := &server.Server{} // your implementation
 
 	handler := server.NewPetStoreServer(api)
+
 	http.ListenAndServe(":8080", handler)
 }
 ```
 
-## 5. Implement the server business logic
+## 5. Implement the Server Business Logic
 
-The generated server code already
+The code generated `http.Handler`:
+
 - handles incoming REST API requests
-- unmarshals JSON request into method argument(s)
-- calls your RPC method implementation, ie. `server.GetPet(ctx, 1)``
-- marshals return argument(s) into a JSON response
+- decodes JSON request body into method argument(s)
+- calls your method implementation
+- sets proper headers and status code
+- encodes method return argument(s) into a JSON response body
 
-What's left is the business logic. Implement the interface methods:
+What's left for you is the method implementation:
 
 ```go
 // rpc/server.go
 package rpc
 
 type Server struct {
-	/* DB connection, config etc. */
+	 // Dependencies like DB connections, logger, configurations, etc.
 }
 ```
 
@@ -164,10 +161,10 @@ package rpc
 func (s *Server) GetUser(ctx context.Context, uid string) (user *User, err error) {
 	user, err := s.DB.GetUser(ctx, uid)
 	if err != nil {
-		if errors.Is(err, io.EOF) {
-			return nil, Errorf(ErrNotFound, "failed to find user(%v)", uid)
+		if errors.Is(err, sql.ErrNoRows {
+			return nil, proto.ErrNotFound.WithCausef("no such user(%q)", uid)
 		}
-		return nil, WrapError(ErrInternal, err, "failed to fetch user(%v)", uid)
+		return nil, proto.ErrUnexpected.WithCausef("fetch user(%q): %w", uid, err)
 	}
 
 	return user, nil
@@ -176,7 +173,7 @@ func (s *Server) GetUser(ctx context.Context, uid string) (user *User, err error
 
 See [source code](./_examples/petStore/server/pets.go)
 
-## 6. Use the generated client
+## 6. Use the Generated Client for Service-To-Service Communication
 
 ```go
 package main
@@ -195,7 +192,7 @@ func main() {
 }
 ```
 
-## 7. Test your API
+## 7. Use the Generated Client in Go Tests
 
 ```go
 package test
@@ -219,7 +216,7 @@ func TestAPI(t *testing.T){
 
 ## Enjoy! <!-- omit in toc -->
 
-..and let us know what you think in [discussions](https://github.com/golang-cz/gospeak/discussions).
+..and please let us know your thoughts in [discussions](https://github.com/golang-cz/gospeak/discussions).
 
 # Authors <!-- omit in toc -->
 - [golang.cz](https://golang.cz)
