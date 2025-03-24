@@ -2,7 +2,7 @@
 
 # GoSpeak <!-- omit in toc -->
 
-GoSpeak is a lightweight code generator that enables you to expose your Go methods as REST API, allowing remote execution from various programming languages, including Go and TypeScript. By generating strongly-typed HTTP clients and OpenAPI documentation, GoSpeak provides a streamlined alternative to [gRPC](https://grpc.io) for web applications, using your Go code as the source of truth and JSON as the data format.
+GoSpeak is a lightweight code generator that exposes your Go methods as REST APIs, enabling remote execution from various languages, including Go and TypeScript. It generates strongly-typed HTTP clients and OpenAPI documentation, offering a streamlined alternative to gRPC for web applications where Go code is your protobuf and JSON is the data format.
 
 | Feature                 | Description |
 |-------------------------|-------------|
