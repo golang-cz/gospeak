@@ -107,6 +107,10 @@ func Parse(filePath string) ([]*Target, error) {
 		p := parser.New(pkg)
 		p.Schema.SchemaName = target.InterfaceName
 
+		if err := p.ExtractEnumConsts(pkg); err != nil {
+			return nil, fmt.Errorf("collecting enums: %w", err)
+		}
+
 		if err := p.CollectEnums(); err != nil {
 			return nil, fmt.Errorf("collecting enums: %w", err)
 		}

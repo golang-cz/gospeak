@@ -8,6 +8,95 @@ import (
 	"github.com/webrpc/webrpc/schema"
 )
 
+func TestStructFieldEnumConst(t *testing.T) {
+	t.Parallel()
+
+	tt := []struct {
+		in  string
+		t   schema.CoreType
+		out []*schema.TypeField
+	}{
+		{
+			in: `
+				// Some comments
+				//gospeak:enum
+				type Status uint8
+				
+				const (
+					StatusUnknown  Status = iota // "unknown"
+					StatusActive                 // "active"
+					StatusInactive               // "inactive"
+					StatusArchived               // "archived"
+					StatusDeleted                // "deleted"
+				)
+			`,
+			t: schema.T_String,
+			out: []*schema.TypeField{
+				// TODO: how can we pass a custom value (uint8) to the webrpc?
+				{Name: "StatusUnknown", TypeExtra: schema.TypeExtra{Value: "unknown"}},
+				{Name: "StatusActive", TypeExtra: schema.TypeExtra{Value: "active"}},
+				{Name: "StatusInactive", TypeExtra: schema.TypeExtra{Value: "inactive"}},
+				{Name: "StatusArchived", TypeExtra: schema.TypeExtra{Value: "archived"}},
+				{Name: "StatusDeleted", TypeExtra: schema.TypeExtra{Value: "deleted"}},
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		srcCode := fmt.Sprintf(`package test
+		
+			import (
+				"context"
+			
+				//"github.com/golang-cz/gospeak/enum"
+			)
+
+			%s
+		
+			type TestStruct struct {
+				Status Status
+			}
+			
+			//go:webrpc json -out=/dev/null
+			type TestAPI interface{
+				Test(ctx context.Context) (tst *TestStruct, err error)
+			}
+			`, tc.in)
+
+		p, err := testParser(srcCode)
+		if err != nil {
+			t.Fatal(fmt.Errorf("parsing: %w", err))
+		}
+
+		if err := p.ExtractEnumConsts(p.Pkg); err != nil {
+			t.Fatalf("collecting enums: %v", err)
+		}
+
+		want := &schema.Type{
+			Kind: schema.TypeKind_Enum,
+			Name: "Status",
+			Type: &schema.VarType{
+				Expr: "uint8", //tc.t.String()
+				Type: schema.T_Enum,
+			},
+			Fields:   tc.out,
+			Comments: []string{"Some comments"},
+		}
+
+		var got *schema.Type
+		for _, schemaType := range p.Schema.Types {
+			if schemaType.Name == "Status" {
+				got = schemaType
+			}
+		}
+
+		if !cmp.Equal(want, got) {
+			t.Errorf("%s\n%s\n", tc.in, coloredDiff(want, got))
+		}
+
+	}
+}
+
 func TestStructFieldEnum(t *testing.T) {
 	t.Parallel()
 
