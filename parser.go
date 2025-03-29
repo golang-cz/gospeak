@@ -47,20 +47,23 @@ func Parse(filePath string) ([]*Target, error) {
 		Overlay: map[string][]byte{},
 	}
 
-	packageLine := fmt.Sprintf("package %s", filepath.Base(dir))
+	// The folloowing code made the parser ignore previously generated Go file to avoid a chicken-egg
+	// problem (ie. syntax errors caused by a file we're currently re-generating).
+	//
+	// TODO: Re-enable this as a development option. This is still useful when developing GoSpeak.
+	{
+		//packageLine := fmt.Sprintf("package %s", filepath.Base(dir))
 
-	// Make the parser ignore all previously generated Go files to avoid the
-	// chicken-egg problem (ie. syntax errors in file we're currently generating).
-	_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err == nil && !info.IsDir() && strings.HasSuffix(path, ".gen.go") {
-			// Overlay the source with an empty package name.
-			cfg.Overlay[path] = []byte(packageLine)
-		}
-		return nil
-	})
-
-	errorsSourceCode := strings.Replace(webrpcErrorsSourceCode, "package gospeak", packageLine, 1)
-	cfg.Overlay[dir+"/webrpcErrors.gen.go"] = []byte(errorsSourceCode)
+		// _ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		// 	if err == nil && !info.IsDir() && strings.HasSuffix(path, ".gen.go") {
+		// 		// Overlay the source with an empty package name.
+		// 		cfg.Overlay[path] = []byte(packageLine)
+		// 	}
+		// 	return nil
+		// })
+		// errorsSourceCode := strings.Replace(webrpcErrorsSourceCode, "package gospeak", packageLine, 1)
+		// cfg.Overlay[dir+"/webrpcErrors.gen.go"] = []byte(errorsSourceCode)
+	}
 
 	pkgs, err := packages.Load(cfg, dir)
 	if err != nil {

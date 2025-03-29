@@ -7,14 +7,14 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-// Parses Go source file and returns WebRPC Schema.
+// Parser walks the Go AST tree of a given package and returns WebRPC Schema.
 //
-// This Parser was designed to run sequentially, without any concurrency, so we can leverage
-// maps to cache the already parsed types, while not having to deal with sync primitives.
+// Walks the AST tree sequentially, without concurrency, to handle circular and
+// recursive types. Aggressively caches parsed types to improve performance.
 type Parser struct {
 	Schema *schema.WebRPCSchema
 
-	// Cache parsed types to improve performance and so we can traverse circular dependencies.
+	// ParsedTypes is a cache to improve performance and so we can traverse circular dependencies.
 	ParsedTypes map[types.Type]*schema.VarType
 
 	ParsedEnumTypes map[string]*schema.Type // Helps lookup enum types by pkg easily.
