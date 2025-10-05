@@ -40,7 +40,7 @@ func main() {
 	for _, target := range targets {
 		config := &gen.Config{
 			RefreshCache:    false,
-			Format:          false,
+			Format:          true,
 			TemplateOptions: target.Opts,
 		}
 

@@ -13,7 +13,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-
 )
 
 const WebrpcHeader = "Webrpc"
@@ -36,67 +35,65 @@ func WebRPCSchemaHash() string {
 }
 
 type WebrpcGenVersions struct {
-    WebrpcGenVersion string
-    CodeGenName string
-    CodeGenVersion string
-    SchemaName string
-    SchemaVersion string
+	WebrpcGenVersion string
+	CodeGenName      string
+	CodeGenVersion   string
+	SchemaName       string
+	SchemaVersion    string
 }
 
 func VersionFromHeader(h http.Header) (*WebrpcGenVersions, error) {
-    if h.Get(WebrpcHeader) == "" {
-        return nil, fmt.Errorf("header is empty or missing")
-    }
+	if h.Get(WebrpcHeader) == "" {
+		return nil, fmt.Errorf("header is empty or missing")
+	}
 
-    versions, err := parseWebrpcGenVersions(h.Get(WebrpcHeader))
-    if err != nil {
-        return nil, fmt.Errorf("webrpc header is invalid: %w", err)
-    }
+	versions, err := parseWebrpcGenVersions(h.Get(WebrpcHeader))
+	if err != nil {
+		return nil, fmt.Errorf("webrpc header is invalid: %w", err)
+	}
 
-    return versions, nil
+	return versions, nil
 }
 
 func parseWebrpcGenVersions(header string) (*WebrpcGenVersions, error) {
-    versions := strings.Split(header, ";")
-    if len(versions) < 3 {
-        return nil, fmt.Errorf("expected at least 3 parts while parsing webrpc header: %v", header)
-    }
+	versions := strings.Split(header, ";")
+	if len(versions) < 3 {
+		return nil, fmt.Errorf("expected at least 3 parts while parsing webrpc header: %v", header)
+	}
 
-    _, webrpcGenVersion, ok := strings.Cut(versions[0], "@")
-    if !ok {
-        return nil, fmt.Errorf("webrpc gen version could not be parsed from: %s", versions[0])
-    }
+	_, webrpcGenVersion, ok := strings.Cut(versions[0], "@")
+	if !ok {
+		return nil, fmt.Errorf("webrpc gen version could not be parsed from: %s", versions[0])
+	}
 
-    tmplTarget, tmplVersion, ok := strings.Cut(versions[1], "@")
-    if !ok {
-        return nil, fmt.Errorf("tmplTarget and tmplVersion could not be parsed from: %s", versions[1])
-    }
+	tmplTarget, tmplVersion, ok := strings.Cut(versions[1], "@")
+	if !ok {
+		return nil, fmt.Errorf("tmplTarget and tmplVersion could not be parsed from: %s", versions[1])
+	}
 
-    schemaName, schemaVersion, ok := strings.Cut(versions[2], "@")
-    if !ok {
-        return nil, fmt.Errorf("schema name and schema version could not be parsed from: %s", versions[2])
-    }
+	schemaName, schemaVersion, ok := strings.Cut(versions[2], "@")
+	if !ok {
+		return nil, fmt.Errorf("schema name and schema version could not be parsed from: %s", versions[2])
+	}
 
-    return &WebrpcGenVersions{
-        WebrpcGenVersion: webrpcGenVersion,
-        CodeGenName: tmplTarget,
-        CodeGenVersion: tmplVersion,
-        SchemaName: schemaName,
-        SchemaVersion: schemaVersion,
-    }, nil
+	return &WebrpcGenVersions{
+		WebrpcGenVersion: webrpcGenVersion,
+		CodeGenName:      tmplTarget,
+		CodeGenVersion:   tmplVersion,
+		SchemaName:       schemaName,
+		SchemaVersion:    schemaVersion,
+	}, nil
 }
 
 //
 // Common types
 //
 
-
-
 const (
 	Status_approved Status = 0
-	Status_pending Status = 1
-	Status_closed Status = 2
-	Status_new Status = 3
+	Status_pending  Status = 1
+	Status_closed   Status = 2
+	Status_new      Status = 3
 )
 
 var Status_name = map[int]string{
@@ -108,9 +105,9 @@ var Status_name = map[int]string{
 
 var Status_value = map[string]int{
 	"approved": 0,
-	"pending": 1,
-	"closed": 2,
-	"new": 3,
+	"pending":  1,
+	"closed":   2,
+	"new":      3,
 }
 
 func (x Status) String() string {
@@ -140,28 +137,28 @@ func (x *Status) Is(values ...Status) bool {
 
 var methods = map[string]method{
 	"/rpc/PetStore/CreatePet": {
-		Name: "CreatePet",
-		Service: "PetStore",
+		Name:        "CreatePet",
+		Service:     "PetStore",
 		Annotations: map[string]string{},
 	},
 	"/rpc/PetStore/DeletePet": {
-		Name: "DeletePet",
-		Service: "PetStore",
+		Name:        "DeletePet",
+		Service:     "PetStore",
 		Annotations: map[string]string{},
 	},
 	"/rpc/PetStore/GetPet": {
-		Name: "GetPet",
-		Service: "PetStore",
+		Name:        "GetPet",
+		Service:     "PetStore",
 		Annotations: map[string]string{},
 	},
 	"/rpc/PetStore/ListPets": {
-		Name: "ListPets",
-		Service: "PetStore",
+		Name:        "ListPets",
+		Service:     "PetStore",
 		Annotations: map[string]string{},
 	},
 	"/rpc/PetStore/UpdatePet": {
-		Name: "UpdatePet",
-		Service: "PetStore",
+		Name:        "UpdatePet",
+		Service:     "PetStore",
 		Annotations: map[string]string{},
 	},
 }
@@ -189,18 +186,9 @@ var WebRPCServices = map[string][]string{
 // Server types
 //
 
-
-
-
-
-
-
-
 //
 // Client types
 //
-
-
 
 //
 // Server
@@ -212,7 +200,7 @@ type WebRPCServer interface {
 
 type petStoreServer struct {
 	PetStore
-	OnError func(r *http.Request, rpcErr *WebRPCError)
+	OnError   func(r *http.Request, rpcErr *WebRPCError)
 	OnRequest func(w http.ResponseWriter, r *http.Request) error
 }
 
@@ -414,8 +402,6 @@ func (s *petStoreServer) serveGetPetJSON(ctx context.Context, w http.ResponseWri
 func (s *petStoreServer) serveListPetsJSON(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	ctx = context.WithValue(ctx, MethodNameCtxKey, "ListPets")
 
-	
-
 	// Call service method implementation.
 	ret0, err := s.PetStore.ListPets(ctx)
 	if err != nil {
@@ -453,7 +439,7 @@ func (s *petStoreServer) serveUpdatePetJSON(ctx context.Context, w http.Response
 
 	reqPayload := struct {
 		Arg0 int64 `json:"ID"`
-		Arg1 *Pet `json:"update"`
+		Arg1 *Pet  `json:"update"`
 	}{}
 	if err := json.Unmarshal(reqBody, &reqPayload); err != nil {
 		s.sendErrorJSON(w, r, ErrWebrpcBadRequest.WithCausef("failed to unmarshal request data: %w", err))
@@ -485,13 +471,10 @@ func (s *petStoreServer) serveUpdatePetJSON(ctx context.Context, w http.Response
 	w.Write(respBody)
 }
 
-
 func (s *petStoreServer) sendErrorJSON(w http.ResponseWriter, r *http.Request, rpcErr WebRPCError) {
 	if s.OnError != nil {
 		s.OnError(r, &rpcErr)
 	}
-
-	
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(rpcErr.HTTPStatus)
@@ -513,15 +496,13 @@ func RespondWithError(w http.ResponseWriter, err error) {
 	w.Write(respBody)
 }
 
-
-
 //
 // Helpers
 //
 
-type method struct  {
-	Name string
-	Service string
+type method struct {
+	Name        string
+	Service     string
 	Annotations map[string]string
 }
 
@@ -571,7 +552,6 @@ func MethodCtx(ctx context.Context) (method, bool) {
 
 	return m, true
 }
-
 
 func ResponseWriterFromContext(ctx context.Context) http.ResponseWriter {
 	w, _ := ctx.Value(HTTPResponseWriterCtxKey).(http.ResponseWriter)
@@ -636,15 +616,15 @@ func ErrorWithCause(rpcErr WebRPCError, cause error) WebRPCError {
 
 // Webrpc errors
 var (
-	ErrWebrpcEndpoint = WebRPCError{Code: 0, Name: "WebrpcEndpoint", Message: "endpoint error", HTTPStatus: 400}
-	ErrWebrpcRequestFailed = WebRPCError{Code: -1, Name: "WebrpcRequestFailed", Message: "request failed", HTTPStatus: 400}
-	ErrWebrpcBadRoute = WebRPCError{Code: -2, Name: "WebrpcBadRoute", Message: "bad route", HTTPStatus: 404}
-	ErrWebrpcBadMethod = WebRPCError{Code: -3, Name: "WebrpcBadMethod", Message: "bad method", HTTPStatus: 405}
-	ErrWebrpcBadRequest = WebRPCError{Code: -4, Name: "WebrpcBadRequest", Message: "bad request", HTTPStatus: 400}
-	ErrWebrpcBadResponse = WebRPCError{Code: -5, Name: "WebrpcBadResponse", Message: "bad response", HTTPStatus: 500}
-	ErrWebrpcServerPanic = WebRPCError{Code: -6, Name: "WebrpcServerPanic", Message: "server panic", HTTPStatus: 500}
-	ErrWebrpcInternalError = WebRPCError{Code: -7, Name: "WebrpcInternalError", Message: "internal error", HTTPStatus: 500}
+	ErrWebrpcEndpoint           = WebRPCError{Code: 0, Name: "WebrpcEndpoint", Message: "endpoint error", HTTPStatus: 400}
+	ErrWebrpcRequestFailed      = WebRPCError{Code: -1, Name: "WebrpcRequestFailed", Message: "request failed", HTTPStatus: 400}
+	ErrWebrpcBadRoute           = WebRPCError{Code: -2, Name: "WebrpcBadRoute", Message: "bad route", HTTPStatus: 404}
+	ErrWebrpcBadMethod          = WebRPCError{Code: -3, Name: "WebrpcBadMethod", Message: "bad method", HTTPStatus: 405}
+	ErrWebrpcBadRequest         = WebRPCError{Code: -4, Name: "WebrpcBadRequest", Message: "bad request", HTTPStatus: 400}
+	ErrWebrpcBadResponse        = WebRPCError{Code: -5, Name: "WebrpcBadResponse", Message: "bad response", HTTPStatus: 500}
+	ErrWebrpcServerPanic        = WebRPCError{Code: -6, Name: "WebrpcServerPanic", Message: "server panic", HTTPStatus: 500}
+	ErrWebrpcInternalError      = WebRPCError{Code: -7, Name: "WebrpcInternalError", Message: "internal error", HTTPStatus: 500}
 	ErrWebrpcClientDisconnected = WebRPCError{Code: -8, Name: "WebrpcClientDisconnected", Message: "client disconnected", HTTPStatus: 400}
-	ErrWebrpcStreamLost = WebRPCError{Code: -9, Name: "WebrpcStreamLost", Message: "stream lost", HTTPStatus: 400}
-	ErrWebrpcStreamFinished = WebRPCError{Code: -10, Name: "WebrpcStreamFinished", Message: "stream finished", HTTPStatus: 200}
+	ErrWebrpcStreamLost         = WebRPCError{Code: -9, Name: "WebrpcStreamLost", Message: "stream lost", HTTPStatus: 400}
+	ErrWebrpcStreamFinished     = WebRPCError{Code: -10, Name: "WebrpcStreamFinished", Message: "stream finished", HTTPStatus: 200}
 )

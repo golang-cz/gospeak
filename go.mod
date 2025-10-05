@@ -2,7 +2,7 @@ module github.com/golang-cz/gospeak
 
 go 1.22.12
 
-toolchain go1.24.0
+toolchain go1.25.0
 
 require (
 	github.com/davecgh/go-spew v1.1.1

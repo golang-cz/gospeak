@@ -2,7 +2,7 @@ module github.com/golang-cz/gospeak/_examples/petStore
 
 go 1.22.12
 
-toolchain go1.24.1
+toolchain go1.25.1
 
 require (
 	github.com/go-chi/chi/v5 v5.0.10

@@ -40,54 +40,54 @@ func WebRPCSchemaHash() string {
 }
 
 type WebrpcGenVersions struct {
-    WebrpcGenVersion string
-    CodeGenName string
-    CodeGenVersion string
-    SchemaName string
-    SchemaVersion string
+	WebrpcGenVersion string
+	CodeGenName      string
+	CodeGenVersion   string
+	SchemaName       string
+	SchemaVersion    string
 }
 
 func VersionFromHeader(h http.Header) (*WebrpcGenVersions, error) {
-    if h.Get(WebrpcHeader) == "" {
-        return nil, fmt.Errorf("header is empty or missing")
-    }
+	if h.Get(WebrpcHeader) == "" {
+		return nil, fmt.Errorf("header is empty or missing")
+	}
 
-    versions, err := parseWebrpcGenVersions(h.Get(WebrpcHeader))
-    if err != nil {
-        return nil, fmt.Errorf("webrpc header is invalid: %w", err)
-    }
+	versions, err := parseWebrpcGenVersions(h.Get(WebrpcHeader))
+	if err != nil {
+		return nil, fmt.Errorf("webrpc header is invalid: %w", err)
+	}
 
-    return versions, nil
+	return versions, nil
 }
 
 func parseWebrpcGenVersions(header string) (*WebrpcGenVersions, error) {
-    versions := strings.Split(header, ";")
-    if len(versions) < 3 {
-        return nil, fmt.Errorf("expected at least 3 parts while parsing webrpc header: %v", header)
-    }
+	versions := strings.Split(header, ";")
+	if len(versions) < 3 {
+		return nil, fmt.Errorf("expected at least 3 parts while parsing webrpc header: %v", header)
+	}
 
-    _, webrpcGenVersion, ok := strings.Cut(versions[0], "@")
-    if !ok {
-        return nil, fmt.Errorf("webrpc gen version could not be parsed from: %s", versions[0])
-    }
+	_, webrpcGenVersion, ok := strings.Cut(versions[0], "@")
+	if !ok {
+		return nil, fmt.Errorf("webrpc gen version could not be parsed from: %s", versions[0])
+	}
 
-    tmplTarget, tmplVersion, ok := strings.Cut(versions[1], "@")
-    if !ok {
-        return nil, fmt.Errorf("tmplTarget and tmplVersion could not be parsed from: %s", versions[1])
-    }
+	tmplTarget, tmplVersion, ok := strings.Cut(versions[1], "@")
+	if !ok {
+		return nil, fmt.Errorf("tmplTarget and tmplVersion could not be parsed from: %s", versions[1])
+	}
 
-    schemaName, schemaVersion, ok := strings.Cut(versions[2], "@")
-    if !ok {
-        return nil, fmt.Errorf("schema name and schema version could not be parsed from: %s", versions[2])
-    }
+	schemaName, schemaVersion, ok := strings.Cut(versions[2], "@")
+	if !ok {
+		return nil, fmt.Errorf("schema name and schema version could not be parsed from: %s", versions[2])
+	}
 
-    return &WebrpcGenVersions{
-        WebrpcGenVersion: webrpcGenVersion,
-        CodeGenName: tmplTarget,
-        CodeGenVersion: tmplVersion,
-        SchemaName: schemaName,
-        SchemaVersion: schemaVersion,
-    }, nil
+	return &WebrpcGenVersions{
+		WebrpcGenVersion: webrpcGenVersion,
+		CodeGenName:      tmplTarget,
+		CodeGenVersion:   tmplVersion,
+		SchemaName:       schemaName,
+		SchemaVersion:    schemaVersion,
+	}, nil
 }
 
 //
@@ -98,9 +98,9 @@ type Status int
 
 const (
 	Status_approved Status = 0
-	Status_pending Status = 1
-	Status_closed Status = 2
-	Status_new Status = 3
+	Status_pending  Status = 1
+	Status_closed   Status = 2
+	Status_new      Status = 3
 )
 
 var Status_name = map[int]string{
@@ -112,9 +112,9 @@ var Status_name = map[int]string{
 
 var Status_value = map[string]int{
 	"approved": 0,
-	"pending": 1,
-	"closed": 2,
-	"new": 3,
+	"pending":  1,
+	"closed":   2,
+	"new":      3,
 }
 
 func (x Status) String() string {
@@ -141,51 +141,51 @@ func (x *Status) Is(values ...Status) bool {
 	}
 	return false
 }
+
 type Tag struct {
-		ID int64 `json:"ID"`
-		Name string `json:"Name"`
+	ID   int64  `json:"ID"`
+	Name string `json:"Name"`
 }
 
 type Pet struct {
-		ID int64 `json:"id,string"`
-		UUID uuid.UUID `json:"uuid,string"`
-		Name string `json:"name"`
-		Available bool `json:"available"`
-		PhotoURLs []string `json:"photoUrls"`
-		Tags []Tag `json:"tags"`
-		CreatedAt time.Time `json:"createdAt"`
-		DeletedAt *time.Time `json:"deletedAt"`
-		Tag Tag `json:"Tag"`
-		TagPtr *Tag `json:"TagPtr"`
-		TagsPtr []Tag `json:"TagsPtr"`
-		Status Status `json:"status"`
+	ID        int64      `json:"id,string"`
+	UUID      uuid.UUID  `json:"uuid,string"`
+	Name      string     `json:"name"`
+	Available bool       `json:"available"`
+	PhotoURLs []string   `json:"photoUrls"`
+	Tags      []Tag      `json:"tags"`
+	CreatedAt time.Time  `json:"createdAt"`
+	DeletedAt *time.Time `json:"deletedAt"`
+	Tag       Tag        `json:"Tag"`
+	TagPtr    *Tag       `json:"TagPtr"`
+	TagsPtr   []Tag      `json:"TagsPtr"`
+	Status    Status     `json:"status"`
 }
-
 
 var methods = map[string]method{
 	"/rpc/PetStore/CreatePet": {
-		Name: "CreatePet",
-		Service: "PetStore",
+		Name:        "CreatePet",
+		Service:     "PetStore",
 		Annotations: map[string]string{},
 	},
 	"/rpc/PetStore/DeletePet": {
-		Name: "DeletePet",
-		Service: "PetStore",
+		Name:        "DeletePet",
+		Service:     "PetStore",
 		Annotations: map[string]string{},
 	},
 	"/rpc/PetStore/GetPet": {
-		Name: "GetPet",
-		Service: "PetStore",
+		Name:        "GetPet",
+		Service:     "PetStore",
 		Annotations: map[string]string{},
 	},
 	"/rpc/PetStore/ListPets": {
-		Name: "ListPets",
-		Service: "PetStore",
+		Name:        "ListPets",
+		Service:     "PetStore",
 		Annotations: map[string]string{},
 	},
 	"/rpc/PetStore/UpdatePet": {
-		Name: "UpdatePet",
-		Service: "PetStore",
+		Name:        "UpdatePet",
+		Service:     "PetStore",
 		Annotations: map[string]string{},
 	},
 }
@@ -221,11 +221,6 @@ type PetStore interface {
 	UpdatePet(ctx context.Context, ID int64, update *Pet) (*Pet, error)
 }
 
-
-
-
-
-
 //
 // Client types
 //
@@ -238,11 +233,6 @@ type PetStoreClient interface {
 	UpdatePet(ctx context.Context, ID int64, update *Pet) (*Pet, error)
 }
 
-
-
-
-
-
 //
 // Client
 //
@@ -251,7 +241,7 @@ const PetStorePathPrefix = "/rpc/PetStore/"
 
 type petStoreClient struct {
 	client HTTPClient
-	urls	 [5]string
+	urls   [5]string
 }
 
 func NewPetStoreClient(addr string, client HTTPClient) PetStoreClient {
@@ -265,7 +255,7 @@ func NewPetStoreClient(addr string, client HTTPClient) PetStoreClient {
 	}
 	return &petStoreClient{
 		client: client,
-		urls:	 urls,
+		urls:   urls,
 	}
 }
 
@@ -342,7 +332,7 @@ func (c *petStoreClient) ListPets(ctx context.Context) ([]*Pet, error) {
 func (c *petStoreClient) UpdatePet(ctx context.Context, ID int64, update *Pet) (*Pet, error) {
 	in := struct {
 		Arg0 int64 `json:"ID"`
-		Arg1 *Pet `json:"update"`
+		Arg1 *Pet  `json:"update"`
 	}{ID, update}
 	out := struct {
 		Ret0 *Pet `json:"pet"`
@@ -389,7 +379,7 @@ func newRequest(ctx context.Context, url string, reqBody io.Reader, contentType 
 	}
 	req.Header.Set("Accept", contentType)
 	req.Header.Set("Content-Type", contentType)
-		req.Header.Set(WebrpcHeader, WebrpcHeaderValue)
+	req.Header.Set(WebrpcHeader, WebrpcHeaderValue)
 	if headers, ok := HTTPRequestHeaders(ctx); ok {
 		for k := range headers {
 			for _, v := range headers[k] {
@@ -481,9 +471,9 @@ func HTTPRequestHeaders(ctx context.Context) (http.Header, bool) {
 // Helpers
 //
 
-type method struct  {
-	Name string
-	Service string
+type method struct {
+	Name        string
+	Service     string
 	Annotations map[string]string
 }
 
@@ -497,7 +487,7 @@ func (k *contextKey) String() string {
 
 var (
 	HTTPClientRequestHeadersCtxKey = &contextKey{"HTTPClientRequestHeaders"}
-	HTTPRequestCtxKey = &contextKey{"HTTPRequest"}
+	HTTPRequestCtxKey              = &contextKey{"HTTPRequest"}
 
 	ServiceNameCtxKey = &contextKey{"ServiceName"}
 
@@ -532,8 +522,6 @@ func MethodCtx(ctx context.Context) (method, bool) {
 
 	return m, true
 }
-
-
 
 //
 // Errors
@@ -593,15 +581,15 @@ func ErrorWithCause(rpcErr WebRPCError, cause error) WebRPCError {
 
 // Webrpc errors
 var (
-	ErrWebrpcEndpoint = WebRPCError{Code: 0, Name: "WebrpcEndpoint", Message: "endpoint error", HTTPStatus: 400}
-	ErrWebrpcRequestFailed = WebRPCError{Code: -1, Name: "WebrpcRequestFailed", Message: "request failed", HTTPStatus: 400}
-	ErrWebrpcBadRoute = WebRPCError{Code: -2, Name: "WebrpcBadRoute", Message: "bad route", HTTPStatus: 404}
-	ErrWebrpcBadMethod = WebRPCError{Code: -3, Name: "WebrpcBadMethod", Message: "bad method", HTTPStatus: 405}
-	ErrWebrpcBadRequest = WebRPCError{Code: -4, Name: "WebrpcBadRequest", Message: "bad request", HTTPStatus: 400}
-	ErrWebrpcBadResponse = WebRPCError{Code: -5, Name: "WebrpcBadResponse", Message: "bad response", HTTPStatus: 500}
-	ErrWebrpcServerPanic = WebRPCError{Code: -6, Name: "WebrpcServerPanic", Message: "server panic", HTTPStatus: 500}
-	ErrWebrpcInternalError = WebRPCError{Code: -7, Name: "WebrpcInternalError", Message: "internal error", HTTPStatus: 500}
+	ErrWebrpcEndpoint           = WebRPCError{Code: 0, Name: "WebrpcEndpoint", Message: "endpoint error", HTTPStatus: 400}
+	ErrWebrpcRequestFailed      = WebRPCError{Code: -1, Name: "WebrpcRequestFailed", Message: "request failed", HTTPStatus: 400}
+	ErrWebrpcBadRoute           = WebRPCError{Code: -2, Name: "WebrpcBadRoute", Message: "bad route", HTTPStatus: 404}
+	ErrWebrpcBadMethod          = WebRPCError{Code: -3, Name: "WebrpcBadMethod", Message: "bad method", HTTPStatus: 405}
+	ErrWebrpcBadRequest         = WebRPCError{Code: -4, Name: "WebrpcBadRequest", Message: "bad request", HTTPStatus: 400}
+	ErrWebrpcBadResponse        = WebRPCError{Code: -5, Name: "WebrpcBadResponse", Message: "bad response", HTTPStatus: 500}
+	ErrWebrpcServerPanic        = WebRPCError{Code: -6, Name: "WebrpcServerPanic", Message: "server panic", HTTPStatus: 500}
+	ErrWebrpcInternalError      = WebRPCError{Code: -7, Name: "WebrpcInternalError", Message: "internal error", HTTPStatus: 500}
 	ErrWebrpcClientDisconnected = WebRPCError{Code: -8, Name: "WebrpcClientDisconnected", Message: "client disconnected", HTTPStatus: 400}
-	ErrWebrpcStreamLost = WebRPCError{Code: -9, Name: "WebrpcStreamLost", Message: "stream lost", HTTPStatus: 400}
-	ErrWebrpcStreamFinished = WebRPCError{Code: -10, Name: "WebrpcStreamFinished", Message: "stream finished", HTTPStatus: 200}
+	ErrWebrpcStreamLost         = WebRPCError{Code: -9, Name: "WebrpcStreamLost", Message: "stream lost", HTTPStatus: 400}
+	ErrWebrpcStreamFinished     = WebRPCError{Code: -10, Name: "WebrpcStreamFinished", Message: "stream finished", HTTPStatus: 200}
 )

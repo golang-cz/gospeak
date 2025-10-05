@@ -34,7 +34,7 @@ func TestJsonTagRegex(t *testing.T) {
 		}
 
 		if !cmp.Equal(jsonTag, tc.out) {
-			t.Errorf(cmp.Diff(jsonTag, tc.out))
+			t.Errorf("diff: %s", cmp.Diff(jsonTag, tc.out))
 		}
 	}
 }
